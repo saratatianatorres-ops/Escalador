@@ -3,6 +3,13 @@
 El robot tiene que pasar de un plano a otro **por sí mismo**, sin cuerdas. Este documento resume qué hace
 falta para lograrlo, cómo se comprobó en simulación y qué reglas de diseño salen de ahí.
 
+> **Ojo: estas simulaciones se hicieron con un robot distinto al tuyo** (un solo chasis de 0,8 kg, ruedas de
+> Ø70 mm, 19 cm entre ejes y dos hélices sueltas encima). Tu robot son dos bases de 450 mm en total, con
+> llantas de Ø33 mm, 417 mm entre ejes y un ducto de 70 mm de alto en cada extremo. La idea del reparto
+> de empuje sigue valiendo, pero los números no. Además, en tu robot el borde de la placa queda al ras de
+> las llantas, así que la placa también toca la pared y frena la subida (regla 1). Hay que repetir las
+> pruebas con tus medidas.
+>
 > **Estado actual del robot:** los dos ESC comparten la señal (IO18), así que todavía **no** puede hacer el
 > reparto de empuje que se describe abajo. Para eso cada ESC necesita su propio pin
 > (ver [hardware/README.md](../hardware/README.md) y [arquitectura.md](arquitectura.md#5-próximo-paso-supervisor-idea-tomada-de-carro_trepador)).

@@ -85,7 +85,7 @@ class FirmwareSimulado(Node):
     def __init__(self):
         super().__init__('robot_trepador')
         self.declare_parameter('v_max', 0.30)           # V_MAX_MS
-        self.declare_parameter('ancho_via', 0.15)       # ANCHO_VIA_M
+        self.declare_parameter('ancho_via', 0.195)      # ANCHO_VIA_M
         self.declare_parameter('empuje_max_n', 10.0)    # N por hélice a ESC_MAX (1700 us)
         self.declare_parameter('reparto_delantera', 1.0)  # fracción del empuje en la hélice delantera
         self.declare_parameter('bat_celdas', 2)

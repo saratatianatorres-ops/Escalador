@@ -12,7 +12,7 @@ hélice**. Pesa el robot armado y mide el empuje de cada A2217 sobre una balanza
 | 2 | Hélice (tamaño: ___ pulgadas) | Empuje hacia la superficie | | | | |
 | 2 | ESC 30A SimonK | Control de cada A2217 (señal en IO18) | ~25 c/u | | | |
 | 4 | Motorreductor N20 (___ V, ___ RPM) | Tracción, 2 por lado | ~10 c/u | | | |
-| 4 | Rueda de goma blanda o silicona (Ø 70 mm en el modelo) | Fricción ≥ 0,9 | | | | |
+| 4 | Goma JSumo SLT20 + rin (Ø33 × 21 mm) | Llantas de silicona, fricción ≥ 0,9 | ~12 c/u | | $ 33.000 + IVA (precio publicado; revisa si es por par) | JSumo |
 | 1 | Módulo DRV8833 | Puente H de los N20 | ~3 | | | |
 | 1 | ESP32 DevKitC-32D | Nodo micro-ROS del robot | ~10 | | | |
 | 1 | Módulo MPU6050 | IMU (orientación) | ~2 | | | |
@@ -22,7 +22,7 @@ hélice**. Pesa el robot armado y mide el empuje de cada A2217 sobre una balanza
 | 1 | Condensador cerámico 100 nF | Filtro del divisor | | | | |
 | 3 | Bornera de 3 pines (J1, J2, J3) | ESC y motores | | | | |
 | 1 | Placa de cobre (PCB de una cara) | Placa del robot | | | | |
-| 1 | Chasis | | | | | |
+| 2 | Base impresa (`cad/Base_2.STL` y su espejo) | Chasis, ducto y soporte del A2217 | | | | |
 
 ## Estación en el PC
 

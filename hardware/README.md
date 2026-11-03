@@ -5,6 +5,7 @@
 | `esquematico.jpg` | Esquemático de la placa del robot (KiCad) |
 | `pcb_cobre.jpg` | Máscara de la capa de cobre para transferencia (está **en espejo**: así se imprime) |
 | `lista_materiales.md` | Componentes, cantidades y peso |
+| `cad/Base_2.STL` | Base impresa (mm). La Base_1 es su espejo. Las mallas del URDF salen de aquí |
 
 > Sube aquí también los archivos de KiCad (`.kicad_pro`, `.kicad_sch`, `.kicad_pcb`) para poder editarlos.
 

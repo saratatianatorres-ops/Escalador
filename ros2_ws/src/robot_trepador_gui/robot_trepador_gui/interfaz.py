@@ -163,7 +163,7 @@ def multiplicar(a, b):
 class Camara:
     """Cámara fija, detrás y un poco a la derecha del robot, mirando hacia abajo."""
 
-    def __init__(self, azimut_grados=205, elevacion_grados=25, escala=900, cx=210, cy=190):
+    def __init__(self, azimut_grados=205, elevacion_grados=25, escala=470, cx=210, cy=190):
         az, el = math.radians(azimut_grados), math.radians(elevacion_grados)
         self.c = (math.cos(el) * math.cos(az), math.cos(el) * math.sin(az), math.sin(el))
         self.r = (-math.sin(az), math.cos(az), 0.0)
@@ -181,8 +181,8 @@ class Camara:
         return sum(p[i] * self.c[i] for i in range(3))
 
 
-# Caja del robot (m): x adelante, y izquierda, z arriba
-LX, LY, LZ = 0.10, 0.07, 0.025
+# Caja del robot (semimedidas, m): x adelante, y izquierda, z arriba. Dos bases: 450 × 216 × 70 mm
+LX, LY, LZ = 0.225, 0.108, 0.035
 VERTICES = [(sx * LX, sy * LY, sz * LZ) for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)]
 #  índice = 4*(sx>0) + 2*(sy>0) + (sz>0)
 CARAS = [
@@ -419,15 +419,15 @@ class Interfaz:
         c.delete('all')
 
         # Suelo de referencia (fijo en el mundo)
-        z_suelo = -0.07
+        z_suelo = -0.10
         for i in range(-4, 5):
-            a = i * 0.05
-            for p1, p2 in (((a, -0.2, z_suelo), (a, 0.2, z_suelo)),
-                           ((-0.2, a, z_suelo), (0.2, a, z_suelo))):
+            a = i * 0.09
+            for p1, p2 in (((a, -0.36, z_suelo), (a, 0.36, z_suelo)),
+                           ((-0.36, a, z_suelo), (0.36, a, z_suelo))):
                 c.create_line(*cam.proyectar(p1), *cam.proyectar(p2), fill='#232b36')
-        for eje, color, nombre in (((0.25, 0, 0), '#e5534b', 'X'),
-                                   ((0, 0.25, 0), '#57ab5a', 'Y'),
-                                   ((0, 0, 0.18), '#539bf5', 'Z')):
+        for eje, color, nombre in (((0.42, 0, 0), '#e5534b', 'X'),
+                                   ((0, 0.42, 0), '#57ab5a', 'Y'),
+                                   ((0, 0, 0.28), '#539bf5', 'Z')):
             o = cam.proyectar((0, 0, z_suelo))
             pnt = cam.proyectar((eje[0], eje[1], eje[2] + z_suelo))
             c.create_line(*o, *pnt, fill=color, width=2, arrow='last')
@@ -449,8 +449,8 @@ class Interfaz:
                              outline='#0f1319', width=2)
 
         # Flecha "adelante" sobre el robot
-        a = cam.proyectar(aplicar(r, (-0.05, 0, LZ + 0.002)))
-        b = cam.proyectar(aplicar(r, (0.13, 0, LZ + 0.002)))
+        a = cam.proyectar(aplicar(r, (-0.12, 0, LZ + 0.002)))
+        b = cam.proyectar(aplicar(r, (0.30, 0, LZ + 0.002)))
         c.create_line(*a, *b, fill='white', width=3, arrow='last', arrowshape=(12, 14, 5))
 
         if not fresca:

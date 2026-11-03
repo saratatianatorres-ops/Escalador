@@ -8,8 +8,11 @@ de ROS 2 en el PC. Incluye modelo 3D para **RViz** y simulación en **Gazebo** c
 [PC: ROS 2 + interfaz + micro_ros_agent] ⇄ USB 921600 ⇄ [ESP32 puente] ⇄ ESP-NOW ⇄ [ESP32 robot: nodo micro-ROS]
 ```
 
-**Hardware:** 2 motores brushless A2217 con 2 ESC 30A SimonK (señal compartida en IO18) · 4 motorreductores N20
-(dos por lado) con un DRV8833 · IMU MPU6050 · ESP32 DevKitC-32D · regulador LM2596.
+![Modelo del robot](docs/img/modelo_rviz.png)
+
+**Hardware:** dos bases impresas fijas (una espejo de la otra), cada una con un ducto y un brushless A2217 ·
+2 ESC 30A SimonK (señal compartida en IO18, tope de 1700 µs) · 4 llantas JSumo SLT20 de Ø33 mm, cada una con su
+N20 (dos por lado en un DRV8833) · IMU MPU6050 · ESP32 DevKitC-32D · regulador LM2596.
 Detalles en [hardware/](hardware/README.md).
 
 ---

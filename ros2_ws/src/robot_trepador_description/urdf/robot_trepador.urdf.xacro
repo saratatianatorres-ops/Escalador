@@ -1,87 +1,145 @@
 <?xml version="1.0"?>
 <!--
-  Robot trepador: chasis, 4 ruedas con un N20 cada una (los dos de cada lado en paralelo
-  en la misma salida del DRV8833),
-  2 hélices encima (ESC en paralelo) e IMU MPU6050.
+  Robot trepador "Escalador"
 
-  Ejes del robot: x adelante, y izquierda, z arriba (la cara de las hélices).
-  Medidas tomadas de claude/fisica_transiciones.md y de firmware/robot_receptor/src/config.h.
+  Chasis: dos bases impresas iguales y fijas entre sí, una espejo de la otra
+  (hardware/cad/Base_2.STL). Van una delante de la otra, unidas por el lado de la
+  repisa, de modo que cada ducto queda en un extremo:
 
-  sim:=true añade los plugins de Gazebo (Harmonic): tracción diferencial, hélices,
-  IMU, odometría y estado de las articulaciones.
+        atrás                         adelante
+     ┌────────────┬──┬──┬────────────┐
+     │  ducto     │re│re│   ducto    │   450 × 216 mm
+     │ (Base_1)   │pi│pi│ (Base_2)   │
+     └────────────┴sa┴sa┴────────────┘
+     o                                o   <- llantas en las esquinas exteriores
+                    x = 0
+
+  Cada base lleva un A2217 en su ducto (succión) y 2 llantas JSumo SLT20
+  (Ø33 × 21 mm) con un N20 cada una. Tracción diferencial: los dos N20 de cada lado
+  van en paralelo en la misma salida del DRV8833.
+
+  Ejes del robot: x adelante, y izquierda, z arriba (lado de los ductos).
+  Origen de base_link: centro del robot, a la altura de la cara inferior de la placa.
+
+  sim:=true añade los plugins de Gazebo Harmonic.
 -->
 <robot name="escalador" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:arg name="sim" default="false"/>
 
   <!-- ================= Medidas (cámbialas aquí) ================= -->
-  <xacro:property name="largo"        value="0.20"/>   <!-- chasis, m -->
-  <xacro:property name="ancho"        value="0.11"/>
-  <xacro:property name="alto"         value="0.03"/>
-  <xacro:property name="masa_chasis"  value="0.60"/>   <!-- + 4 ruedas + 2 hélices = 0,8 kg -->
+  <!-- Bases (de Base_2.STL) -->
+  <xacro:property name="largo_base"    value="0.225"/>   <!-- cada base, en x -->
+  <xacro:property name="ancho"         value="0.216"/>
+  <xacro:property name="esp_placa"     value="0.010"/>
+  <xacro:property name="ancho_repisa"  value="0.026"/>
+  <xacro:property name="alto_repisa"   value="0.057"/>
+  <xacro:property name="ducto_x"       value="0.127"/>   <!-- centro del ducto desde la unión -->
+  <xacro:property name="ducto_r"       value="0.0975"/>  <!-- radio exterior del anillo -->
+  <xacro:property name="ducto_alto"    value="0.070"/>
 
-  <xacro:property name="r_rueda"      value="0.035"/>
-  <xacro:property name="ancho_rueda"  value="0.02"/>
-  <xacro:property name="masa_rueda"   value="0.04"/>
-  <xacro:property name="eje_x"        value="0.095"/>  <!-- ejes delantero y trasero a ±9,5 cm -->
-  <xacro:property name="via"          value="0.15"/>   <!-- ANCHO_VIA_M del firmware -->
-  <xacro:property name="par_rueda"    value="0.2"/>    <!-- N·m máximo por rueda -->
-  <xacro:property name="vel_rueda"    value="20"/>     <!-- rad/s máximo -->
-  <xacro:property name="mu_rueda"     value="1.0"/>    <!-- fricción goma/superficie -->
+  <!-- Llantas JSumo SLT20 (Ø33 × 21 mm, banda de 18 mm) -->
+  <xacro:property name="r_rueda"       value="0.0165"/>
+  <xacro:property name="ancho_rueda"   value="0.021"/>
+  <xacro:property name="ancho_banda"   value="0.018"/>
+  <xacro:property name="r_rin"         value="0.0135"/>
+  <!-- Posición de las llantas: en las esquinas exteriores, debajo de la placa.
+       margen_x = cuánto queda el borde de la llanta por dentro del borde de la placa
+       eje_bajo_placa = distancia del eje a la cara inferior de la placa (soporte del N20) -->
+  <xacro:property name="margen_x"      value="0.0"/>
+  <xacro:property name="eje_bajo_placa" value="0.005"/>
+  <xacro:property name="rueda_x"       value="${largo_base - r_rueda - margen_x}"/>
+  <xacro:property name="via"           value="${ancho - ancho_rueda}"/>  <!-- 0,195 m entre centros -->
+  <xacro:property name="par_rueda"     value="0.2"/>     <!-- N·m máximo por N20 -->
+  <xacro:property name="vel_rueda"     value="30"/>      <!-- rad/s máximo -->
+  <xacro:property name="mu_rueda"      value="1.0"/>     <!-- silicona sobre superficie lisa -->
 
-  <xacro:property name="helice_del_x" value="0.04"/>   <!-- hélice delantera +4 cm -->
-  <xacro:property name="helice_tra_x" value="-0.09"/>  <!-- hélice trasera −9 cm -->
-  <xacro:property name="altura_motor" value="0.03"/>
-  <xacro:property name="d_helice"     value="0.127"/>  <!-- 5 pulgadas -->
-  <xacro:property name="masa_helice"  value="0.02"/>
+  <!-- Hélices dentro de los ductos -->
+  <xacro:property name="d_helice"      value="0.178"/>   <!-- 7 pulgadas: ajusta a la tuya -->
+  <xacro:property name="altura_helice" value="0.045"/>   <!-- desde la cara inferior de la placa -->
+
+  <!-- Masas (kg): PÉSALAS y corrige. Total ≈ 0,89 kg -->
+  <xacro:property name="masa_bases"    value="0.40"/>    <!-- las dos piezas impresas -->
+  <xacro:property name="masa_electronica" value="0.28"/> <!-- 2 ESC, ESP32, DRV8833, LM2596, MPU6050, batería, 4 N20 -->
+  <xacro:property name="masa_motor"    value="0.07"/>    <!-- cada A2217 -->
+  <xacro:property name="masa_helice"   value="0.01"/>
+  <xacro:property name="masa_rueda"    value="0.012"/>   <!-- goma + rin -->
+  <xacro:property name="masa_chasis"   value="${masa_bases + masa_electronica}"/>
 
   <!-- ================= Materiales ================= -->
-  <material name="azul">    <color rgba="0.23 0.44 0.71 1"/></material>
-  <material name="naranja"> <color rgba="0.94 0.55 0.16 1"/></material>
+  <material name="base">    <color rgba="0.23 0.44 0.71 1"/></material>
+  <material name="base2">   <color rgba="0.30 0.52 0.80 1"/></material>
+  <material name="naranja"> <color rgba="0.95 0.45 0.10 1"/></material>
+  <material name="gris">    <color rgba="0.60 0.62 0.65 1"/></material>
   <material name="negro">   <color rgba="0.12 0.12 0.14 1"/></material>
-  <material name="gris">    <color rgba="0.55 0.57 0.60 1"/></material>
-  <material name="helice">  <color rgba="0.85 0.85 0.90 0.6"/></material>
+  <material name="helice">  <color rgba="0.85 0.85 0.90 0.55"/></material>
 
-  <!-- ================= Chasis ================= -->
+  <!-- ================= Chasis (las dos bases) ================= -->
   <link name="base_link">
     <visual>
-      <geometry><box size="${largo} ${ancho} ${alto}"/></geometry>
-      <material name="azul"/>
+      <geometry><mesh filename="package://robot_trepador_description/meshes/base_delantera.stl"/></geometry>
+      <material name="base"/>
+    </visual>
+    <visual>
+      <geometry><mesh filename="package://robot_trepador_description/meshes/base_trasera.stl"/></geometry>
+      <material name="base2"/>
     </visual>
     <!-- franja naranja = delante (igual que en la vista 3D de la interfaz) -->
     <visual>
-      <origin xyz="${largo/2 - 0.005} 0 0"/>
-      <geometry><box size="0.01 ${ancho + 0.002} ${alto + 0.002}"/></geometry>
+      <origin xyz="${largo_base - 0.004} 0 ${esp_placa + 0.002}"/>
+      <geometry><box size="0.008 ${ancho} 0.004"/></geometry>
       <material name="naranja"/>
     </visual>
-    <collision>
-      <geometry><box size="${largo} ${ancho} ${alto}"/></geometry>
+
+    <!-- Colisiones con formas simples (más rápidas y estables que la malla) -->
+    <collision>  <!-- placa -->
+      <origin xyz="0 0 ${esp_placa/2}"/>
+      <geometry><box size="${2*largo_base} ${ancho} ${esp_placa}"/></geometry>
     </collision>
+    <collision>  <!-- ducto delantero -->
+      <origin xyz="${ducto_x} 0 ${(esp_placa + ducto_alto)/2}"/>
+      <geometry><cylinder radius="${ducto_r}" length="${ducto_alto - esp_placa}"/></geometry>
+    </collision>
+    <collision>  <!-- ducto trasero -->
+      <origin xyz="${-ducto_x} 0 ${(esp_placa + ducto_alto)/2}"/>
+      <geometry><cylinder radius="${ducto_r}" length="${ducto_alto - esp_placa}"/></geometry>
+    </collision>
+    <collision>  <!-- repisas -->
+      <origin xyz="0 0 ${(esp_placa + alto_repisa)/2}"/>
+      <geometry><box size="${2*ancho_repisa} ${ancho} ${alto_repisa - esp_placa}"/></geometry>
+    </collision>
+
+    <!-- Centro de masa e inercia calculados de la malla de las dos bases (por kg × masa) -->
     <inertial>
+      <origin xyz="0 0 0.0173"/>
       <mass value="${masa_chasis}"/>
-      <inertia ixx="${masa_chasis*(ancho*ancho + alto*alto)/12}" ixy="0" ixz="0"
-               iyy="${masa_chasis*(largo*largo + alto*alto)/12}" iyz="0"
-               izz="${masa_chasis*(largo*largo + ancho*ancho)/12}"/>
+      <inertia ixx="${0.004484*masa_chasis}" ixy="0" ixz="0"
+               iyy="${0.016137*masa_chasis}" iyz="0"
+               izz="${0.019815*masa_chasis}"/>
     </inertial>
   </link>
 
-  <!-- ================= Ruedas ================= -->
+  <!-- ================= Llantas ================= -->
   <xacro:macro name="rueda" params="nombre x y">
     <link name="rueda_${nombre}">
-      <visual>
+      <visual>   <!-- goma -->
         <origin rpy="${pi/2} 0 0"/>
-        <geometry><cylinder radius="${r_rueda}" length="${ancho_rueda}"/></geometry>
-        <material name="negro"/>
+        <geometry><cylinder radius="${r_rueda}" length="${ancho_banda}"/></geometry>
+        <material name="naranja"/>
       </visual>
-      <!-- marca para ver girar la rueda -->
-      <visual>
-        <origin xyz="${r_rueda*0.6} 0 0" rpy="${pi/2} 0 0"/>
-        <geometry><box size="${r_rueda*0.6} 0.006 ${ancho_rueda + 0.002}"/></geometry>
+      <visual>   <!-- rin -->
+        <origin rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${r_rin}" length="${ancho_rueda}"/></geometry>
         <material name="gris"/>
+      </visual>
+      <visual>   <!-- marca para ver girar la llanta -->
+        <origin xyz="${r_rin*0.55} 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><box size="${r_rin*0.7} 0.004 ${ancho_rueda + 0.002}"/></geometry>
+        <material name="negro"/>
       </visual>
       <collision>
         <origin rpy="${pi/2} 0 0"/>
-        <geometry><cylinder radius="${r_rueda}" length="${ancho_rueda}"/></geometry>
+        <geometry><cylinder radius="${r_rueda}" length="${ancho_banda}"/></geometry>
       </collision>
       <inertial>
         <mass value="${masa_rueda}"/>
@@ -93,7 +151,7 @@
     <joint name="rueda_${nombre}_joint" type="continuous">
       <parent link="base_link"/>
       <child link="rueda_${nombre}"/>
-      <origin xyz="${x} ${y} 0"/>
+      <origin xyz="${x} ${y} ${-eje_bajo_placa}"/>
       <axis xyz="0 1 0"/>
       <limit effort="${par_rueda}" velocity="${vel_rueda}"/>
     </joint>
@@ -103,31 +161,32 @@
     </gazebo>
   </xacro:macro>
 
-  <xacro:rueda nombre="del_izq" x="${eje_x}"  y="${via/2}"/>
-  <xacro:rueda nombre="del_der" x="${eje_x}"  y="${-via/2}"/>
-  <xacro:rueda nombre="tra_izq" x="${-eje_x}" y="${via/2}"/>
-  <xacro:rueda nombre="tra_der" x="${-eje_x}" y="${-via/2}"/>
+  <!-- Base delantera (Base_2) y base trasera (Base_1): 2 llantas cada una -->
+  <xacro:rueda nombre="del_izq" x="${rueda_x}"  y="${via/2}"/>
+  <xacro:rueda nombre="del_der" x="${rueda_x}"  y="${-via/2}"/>
+  <xacro:rueda nombre="tra_izq" x="${-rueda_x}" y="${via/2}"/>
+  <xacro:rueda nombre="tra_der" x="${-rueda_x}" y="${-via/2}"/>
 
-  <!-- ================= Hélices ================= -->
+  <!-- ================= Motores A2217 y hélices (una por ducto) ================= -->
   <!-- El eje de la articulación apunta a −z: el empuje positivo aprieta el robot
-       contra la superficie (el aire sale hacia arriba). -->
+       contra la superficie (el ventilador saca el aire hacia arriba). -->
   <xacro:macro name="helice" params="nombre x">
     <link name="motor_${nombre}">
       <visual>
-        <origin xyz="0 0 ${altura_motor/2}"/>
-        <geometry><cylinder radius="0.014" length="${altura_motor}"/></geometry>
-        <material name="gris"/>
+        <origin xyz="0 0 ${(altura_helice - esp_placa)/2}"/>
+        <geometry><cylinder radius="0.014" length="${altura_helice - esp_placa}"/></geometry>
+        <material name="negro"/>
       </visual>
       <inertial>
-        <origin xyz="0 0 ${altura_motor/2}"/>
-        <mass value="0.001"/>
-        <inertia ixx="1e-7" ixy="0" ixz="0" iyy="1e-7" iyz="0" izz="1e-7"/>
+        <origin xyz="0 0 ${(altura_helice - esp_placa)/2}"/>
+        <mass value="${masa_motor}"/>
+        <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="7e-6"/>
       </inertial>
     </link>
     <joint name="motor_${nombre}_joint" type="fixed">
       <parent link="base_link"/>
       <child link="motor_${nombre}"/>
-      <origin xyz="${x} 0 ${alto/2}"/>
+      <origin xyz="${x} 0 ${esp_placa}"/>
     </joint>
 
     <link name="helice_${nombre}">
@@ -136,8 +195,8 @@
         <material name="helice"/>
       </visual>
       <visual>
-        <geometry><box size="${d_helice} 0.012 0.004"/></geometry>
-        <material name="naranja"/>
+        <geometry><box size="${d_helice} 0.014 0.004"/></geometry>
+        <material name="gris"/>
       </visual>
       <inertial>
         <mass value="${masa_helice}"/>
@@ -149,20 +208,20 @@
     <joint name="helice_${nombre}_joint" type="continuous">
       <parent link="base_link"/>
       <child link="helice_${nombre}"/>
-      <origin xyz="${x} 0 ${alto/2 + altura_motor}"/>
+      <origin xyz="${x} 0 ${altura_helice}"/>
       <axis xyz="0 0 -1"/>
     </joint>
   </xacro:macro>
 
-  <xacro:helice nombre="delantera" x="${helice_del_x}"/>
-  <xacro:helice nombre="trasera"   x="${helice_tra_x}"/>
+  <xacro:helice nombre="delantera" x="${ducto_x}"/>
+  <xacro:helice nombre="trasera"   x="${-ducto_x}"/>
 
-  <!-- ================= IMU (MPU6050) ================= -->
+  <!-- ================= IMU (MPU6050), en la zona de las repisas ================= -->
   <link name="imu_link"/>
   <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
     <child link="imu_link"/>
-    <origin xyz="0 0 ${alto/2}"/>
+    <origin xyz="0 0 ${esp_placa + 0.02}"/>
   </joint>
 
   <!-- ================= Plugins de Gazebo Harmonic ================= -->
@@ -195,31 +254,23 @@
         <tf_topic>/model/escalador/tf_plana</tf_topic>
       </plugin>
 
-      <!-- Hélices: reciben el empuje en N (std_msgs/Float64 desde ROS) -->
-      <plugin filename="gz-sim-thruster-system" name="gz::sim::systems::Thruster">
-        <namespace>escalador</namespace>
-        <joint_name>helice_delantera_joint</joint_name>
-        <topic>empuje_delantero</topic>
-        <thrust_coefficient>0.1</thrust_coefficient>
-        <fluid_density>1.2</fluid_density>
-        <propeller_diameter>${d_helice}</propeller_diameter>
-        <velocity_control>true</velocity_control>
-        <use_angvel_cmd>false</use_angvel_cmd>
-        <min_thrust_cmd>0</min_thrust_cmd>
-        <max_thrust_cmd>30</max_thrust_cmd>
-      </plugin>
-      <plugin filename="gz-sim-thruster-system" name="gz::sim::systems::Thruster">
-        <namespace>escalador</namespace>
-        <joint_name>helice_trasera_joint</joint_name>
-        <topic>empuje_trasero</topic>
-        <thrust_coefficient>0.1</thrust_coefficient>
-        <fluid_density>1.2</fluid_density>
-        <propeller_diameter>${d_helice}</propeller_diameter>
-        <velocity_control>true</velocity_control>
-        <use_angvel_cmd>false</use_angvel_cmd>
-        <min_thrust_cmd>0</min_thrust_cmd>
-        <max_thrust_cmd>30</max_thrust_cmd>
-      </plugin>
+      <!-- Succión de cada ducto: reciben el empuje en N (std_msgs/Float64 desde ROS) -->
+      <xacro:macro name="empuje" params="nombre topico">
+        <plugin filename="gz-sim-thruster-system" name="gz::sim::systems::Thruster">
+          <namespace>escalador</namespace>
+          <joint_name>helice_${nombre}_joint</joint_name>
+          <topic>${topico}</topic>
+          <thrust_coefficient>0.1</thrust_coefficient>
+          <fluid_density>1.2</fluid_density>
+          <propeller_diameter>${d_helice}</propeller_diameter>
+          <velocity_control>true</velocity_control>
+          <use_angvel_cmd>false</use_angvel_cmd>
+          <min_thrust_cmd>0</min_thrust_cmd>
+          <max_thrust_cmd>40</max_thrust_cmd>
+        </plugin>
+      </xacro:macro>
+      <xacro:empuje nombre="delantera" topico="empuje_delantero"/>
+      <xacro:empuje nombre="trasera"   topico="empuje_trasero"/>
 
       <!-- Posición real en 3D (también en la pared y el techo) para RViz -->
       <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">

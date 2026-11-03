@@ -52,8 +52,8 @@ class OdometriaImu(Node):
         super().__init__('odometria_imu')
         self.declare_parameter('v_max', 0.30)        # V_MAX_MS del firmware
         self.declare_parameter('pwm_max', 1023)      # MOTOR_PWM_MAX
-        self.declare_parameter('ancho_via', 0.15)    # ANCHO_VIA_M
-        self.declare_parameter('radio_rueda', 0.035)
+        self.declare_parameter('ancho_via', 0.195)   # ANCHO_VIA_M
+        self.declare_parameter('radio_rueda', 0.0165)  # JSumo SLT20, Ø33 mm
         self.declare_parameter('frecuencia', 50.0)
 
         self.v_max = float(self.get_parameter('v_max').value)

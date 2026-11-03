@@ -54,7 +54,7 @@ def generate_launch_description():
         DeclareLaunchArgument('interfaz', default_value='true'),
         DeclareLaunchArgument('x', default_value='0.0'),
         DeclareLaunchArgument('y', default_value='0.0'),
-        DeclareLaunchArgument('z', default_value='0.04'),
+        DeclareLaunchArgument('z', default_value='0.02'),
         DeclareLaunchArgument('yaw', default_value='0.0'),
         DeclareLaunchArgument('empuje_max_n', default_value='10.0',
                               description='Empuje de cada hélice a 1700 us, el máximo permitido (N)'),

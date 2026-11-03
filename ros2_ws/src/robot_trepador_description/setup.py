@@ -13,6 +13,7 @@ setup(
         ('share/' + paquete + '/launch', glob('launch/*.py')),
         ('share/' + paquete + '/urdf', glob('urdf/*')),
         ('share/' + paquete + '/rviz', glob('rviz/*')),
+        ('share/' + paquete + '/meshes', glob('meshes/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
