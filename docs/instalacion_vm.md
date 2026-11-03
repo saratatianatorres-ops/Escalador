@@ -53,7 +53,7 @@ Prueba: `ros2 run demo_nodes_cpp talker` en una terminal y `ros2 run demo_nodes_
 ```bash
 sudo rosdep init; rosdep update
 mkdir -p ~/microros_ws/src && cd ~/microros_ws
-git clone -b jazzy https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
+git clone -b $ROS_DISTRO https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup   # jazzy o humble
 rosdep install --from-paths src --ignore-src -y
 colcon build && source install/local_setup.bash
 ros2 run micro_ros_setup create_agent_ws.sh

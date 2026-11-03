@@ -1,6 +1,6 @@
 # Simulación (Gazebo) y visualización (RViz)
 
-Requiere ROS 2 Jazzy y Gazebo Harmonic (`scripts/instalar_dependencias.sh` instala todo).
+Requiere ROS 2 Jazzy o Humble y Gazebo Harmonic (`scripts/instalar_dependencias.sh` instala todo).
 Paquetes: `robot_trepador_description` (modelo URDF, RViz) y `robot_trepador_gazebo` (mundo, puente, firmware simulado).
 El grafo de nodos está en [arquitectura.md](arquitectura.md).
 

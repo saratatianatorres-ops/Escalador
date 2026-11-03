@@ -69,7 +69,9 @@ Escalador/
 
 ### 1. Instalar (una vez)
 
-Con Ubuntu 24.04 y ROS 2 Jazzy (si no los tienes: [docs/instalacion_vm.md](docs/instalacion_vm.md)):
+Con Ubuntu 24.04 + ROS 2 Jazzy, o Ubuntu 22.04 + ROS 2 Humble (si no tienes ninguno:
+[docs/instalacion_vm.md](docs/instalacion_vm.md)). El script detecta cuál tienes; en Humble instala Gazebo
+Harmonic desde el repositorio de Gazebo y pone `board_microros_distro = humble` en el firmware:
 
 ```bash
 ./scripts/instalar_dependencias.sh
