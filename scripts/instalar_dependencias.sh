@@ -47,7 +47,7 @@ fi
 source /opt/ros/$DISTRO/setup.bash
 cd "$RAIZ/ros2_ws"
 rm -rf build install log      # por si se compiló antes con otra distro
-colcon build --symlink-install
+colcon build
 
 echo
 echo "Listo. En cada terminal nueva:  source $RAIZ/ros2_ws/install/setup.bash"
