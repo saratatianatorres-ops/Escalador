@@ -93,7 +93,8 @@ Las dos ESP usan el canal 1 y se encuentran solas (no hace falta copiar MACs).
 3. En la interfaz:
    - **▲ ▼ ◀ ▶** (mantener pulsado) o flechas / W A S D: adelante, atrás y giro sobre sí mismo. Los
      deslizadores fijan la velocidad.
-   - **+ / −**: hélices de 100 en 100 µs entre 1000 y `esc_max` (1800 por defecto). El robot sube en rampa;
+   - **+ / −**: hélices de 100 en 100 µs entre 1000 y **1700 como máximo**. Es el límite para que los A2217
+     no pasen de ~23–25 A; el robot lo aplica aunque le manden más. El robot sube en rampa;
      "en el robot" muestra el valor real.
    - **Batería**: barra con el porcentaje, el voltaje total y por celda; se pone amarilla con batería baja y
      roja (parpadeando) en estado crítico. Necesita el divisor de tensión en el IO34

@@ -9,7 +9,7 @@
 void actuadoresIniciar();          // arma los ESC (bloquea ESC_TIEMPO_ARMADO_MS)
 void actuadoresActualizar();       // rampa del ESC y timeouts; llamar en cada loop()
 
-// ESC: <ESC_MIN (p. ej. 1000) = apagar al instante; 1100..2000 = objetivo con rampa
+// ESC: <ESC_MIN (p. ej. 1000) = apagar al instante; 1100..ESC_MAX (1700) = objetivo con rampa; más se recorta
 void escOrden(int us);
 
 // Ruedas: -1.0 .. +1.0 por lado (positivo = adelante)

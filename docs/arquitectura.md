@@ -74,7 +74,7 @@ flowchart LR
 | Tópico | Tipo | Publica | Se suscribe | Para qué |
 |---|---|---|---|---|
 | `/robot/cmd_vel` | `geometry_msgs/Twist` | interfaz | robot | `linear.x` (m/s) y `angular.z` (rad/s), lazo abierto |
-| `/robot/esc` | `std_msgs/Int32` | interfaz | robot | µs del ESC: 1000 apaga; 1100–2000 con rampa |
+| `/robot/esc` | `std_msgs/Int32` | interfaz | robot | µs del ESC: 1000 apaga; 1100–1700 con rampa (más se recorta) |
 | `/robot/ruedas` | `std_msgs/Float32MultiArray` | (pruebas a mano) | robot | `[izq, der]` de −1 a 1, PWM directo |
 | `/robot/parada` | `std_msgs/Bool` | interfaz | robot | Parada de emergencia enclavada |
 | `/robot/imu` | `sensor_msgs/Imu` | robot | interfaz, odometria_imu | Orientación ya calculada en el robot. QoS de sensores (best effort) |
@@ -94,6 +94,7 @@ El formato del JSON de `/robot/estado` está en [firmware.md](firmware.md).
 | Se pierde el agente o ESP-NOW (3 pings) | Todo apagado y reconexión automática | ESP32 |
 | PARADA (botón o espacio) | Apaga todo y bloquea hasta LIBERAR | ESP32 (enclavada) |
 | Arranque | ESC a 1000 µs durante 3 s (armado), ruedas frenadas | ESP32 |
+| Orden de ESC mayor de 1700 µs | Se recorta a 1700 (los A2217 no pasan de ~23–25 A) | ESP32 e interfaz |
 | Batería baja o crítica | Aviso amarillo o rojo en la interfaz. **No apaga nada** (en la pared se caería) | ESP32 mide, interfaz avisa |
 | Se cierra la interfaz | Manda apagar antes de salir; si no alcanza, actúan los timeouts | PC + ESP32 |
 

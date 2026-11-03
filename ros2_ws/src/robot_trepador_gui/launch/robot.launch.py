@@ -24,7 +24,7 @@ def generate_launch_description():
                               description='Puerto USB de la ESP puente'),
         DeclareLaunchArgument('agente', default_value='true',
                               description='Lanzar también el micro_ros_agent'),
-        DeclareLaunchArgument('esc_max', default_value='1800',
+        DeclareLaunchArgument('esc_max', default_value='1700',
                               description='Tope del botón + de las hélices (us)'),
         DeclareLaunchArgument('rviz', default_value='false',
                               description='Mostrar el robot en RViz (orientación de la IMU)'),

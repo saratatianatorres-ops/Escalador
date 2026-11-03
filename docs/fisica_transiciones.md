@@ -60,11 +60,15 @@ Suelo → pared funciona siempre. Pared → techo: nunca con fricción 0,8 (0 de
 | 90 % | suelo → pared → techo |
 | 100 % | suelo → pared → techo |
 
-Por eso el reparto solo debe intentarse con el acelerador en **90 % o más**: con menos, es mejor que el
-robot se quede contra la pared que intentar una subida que no va a lograr.
+Es decir: el reparto solo funciona con **unos 9 N o más por hélice**. Con menos, es mejor que el robot
+se quede contra la pared que intentar una subida que no va a lograr.
 
-> Ojo: el botón **+** de la interfaz tiene hoy el tope en 1800 µs (80 %), que es justo el peor caso.
-> Se cambia con `esc_max:=2000` al lanzar, cuando hayas medido el empuje real.
+> **Tu robot tiene el acelerador limitado a 1700 µs** para que los A2217 no pasen de ~23–25 A y no se
+> quemen. Lo que cuenta entonces no es el porcentaje sino **cuántos newtons empuja cada hélice a 1700 µs**.
+> Mídelo sobre una balanza: si da 9–10 N o más (0,9–1 kgf), vale todo lo de esta tabla. Si da menos, el robot
+> estará en la zona de "se queda atascado" o "sube y se cae". Para tener más empuje sin subir el
+> acelerador habría que cambiar de hélice o de batería, y eso **también sube la corriente**: compruébalo
+> con un vatímetro antes de usarlo.
 
 ### 5. Ida y vuelta
 
@@ -83,8 +87,9 @@ robot se quede contra la pared que intentar una subida que no va a lograr.
    el DRV8833. La rueda delantera tiene que girar para trepar.
 4. **Fricción de las ruedas ≥ 0,9** sobre la superficie: goma blanda o silicona. Con 0,8 no pasa al techo
    de forma confiable. Para medirla, pon el robot sobre la superficie e inclínala hasta que deslice: μ = tan(ángulo).
-5. **Empuje ≥ 10 N por hélice al 100 %** (unos 1 kgf; los dos juntos ≈ 2,5 veces el peso) con un robot de
-   0,8 kg. Mide el empuje real de tus A2217 con su hélice sobre una balanza antes de confiar en el techo.
+5. **Empuje ≥ 10 N por hélice a 1700 µs**, el máximo permitido (unos 1 kgf; los dos juntos ≈ 2,5 veces el
+   peso) con un robot de 0,8 kg. Mide el empuje real de tus A2217 con su hélice sobre una balanza, y la
+   corriente con un vatímetro, antes de confiar en el techo.
    Si tu robot pesa más, el empuje tiene que subir en la misma proporción.
 6. **Centro de masa** cerca del centro o un poco hacia atrás (la batería atrás ayuda).
 

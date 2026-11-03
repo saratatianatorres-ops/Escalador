@@ -57,14 +57,14 @@ def generate_launch_description():
         DeclareLaunchArgument('z', default_value='0.04'),
         DeclareLaunchArgument('yaw', default_value='0.0'),
         DeclareLaunchArgument('empuje_max_n', default_value='10.0',
-                              description='Empuje de cada hélice a 2000 us (N)'),
+                              description='Empuje de cada hélice a 1700 us, el máximo permitido (N)'),
         DeclareLaunchArgument('reparto_delantera', default_value='1.0',
                               description='Fracción del empuje en la hélice delantera. 1.0 = ESC '
                                           'en paralelo (firmware actual); 0.0 = solo la trasera'),
         DeclareLaunchArgument('bat_celdas', default_value='2', description='Celdas de la LiPo simulada'),
         DeclareLaunchArgument('bat_mah', default_value='2200.0', description='Capacidad (mAh)'),
         DeclareLaunchArgument('bat_carga_inicial', default_value='0.95', description='Carga al empezar (0..1)'),
-        DeclareLaunchArgument('esc_max', default_value='1800',
+        DeclareLaunchArgument('esc_max', default_value='1700',
                               description='Tope del botón + de la interfaz (us)'),
 
         # Gazebo encuentra el modelo del robot (package://...) sin configurar nada

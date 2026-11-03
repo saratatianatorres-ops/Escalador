@@ -31,7 +31,7 @@ Si un lado de motores gira al revés, cambia `MOTOR_IZQ_INVERTIDO` o `MOTOR_DER_
 
 | Tópico | Tipo | Dirección | Uso |
 |---|---|---|---|
-| `/robot/esc` | `std_msgs/Int32` | PC → robot | µs para los ESC. `1000` apaga al instante; `1100`–`2000` sube o baja en rampa (20 µs cada 0,2 s) |
+| `/robot/esc` | `std_msgs/Int32` | PC → robot | µs para los ESC. `1000` apaga al instante; `1100`–`1700` sube o baja en rampa (20 µs cada 0,2 s). Más de 1700 se recorta |
 | `/robot/cmd_vel` | `geometry_msgs/Twist` | PC → robot | `linear.x` (m/s) y `angular.z` (rad/s). Lazo abierto: ajusta `V_MAX_MS` y `ANCHO_VIA_M` |
 | `/robot/ruedas` | `std_msgs/Float32MultiArray` | PC → robot | `[izq, der]` de −1 a 1, PWM directo |
 | `/robot/parada` | `std_msgs/Bool` | PC → robot | `true` = parada de emergencia enclavada; `false` la libera |
@@ -59,6 +59,10 @@ Ejemplo de `/robot/estado`:
   buffer lleno y las conexiones al agente.
 
 ## Seguridad
+
+- **Tope de 1700 µs** (`ESC_MAX` en `config.h`): por encima, los A2217 pasan de ~23–25 A y se pueden
+  quemar. El robot recorta cualquier orden mayor, aunque venga de la terminal o de otro programa. La
+  interfaz también tiene el botón **+** limitado a 1700.
 
 - **ESC:** si no llega `/robot/esc` en 2 s, las hélices pasan a 1000 µs. Por eso la orden se publica de
   forma periódica (la interfaz lo hace a 5 Hz).

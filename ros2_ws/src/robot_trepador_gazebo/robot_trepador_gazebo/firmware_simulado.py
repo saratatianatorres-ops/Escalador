@@ -4,7 +4,7 @@ Hace en la simulación lo mismo que el firmware del ESP32 (firmware/robot_recept
 para que la interfaz funcione igual con Gazebo que con el robot real.
 
 Escucha los mismos tópicos que el robot:
-  /robot/esc      std_msgs/Int32              us del ESC (1000 = apagado, 1100..2000)
+  /robot/esc      std_msgs/Int32              us del ESC (1000 = apagado, 1100..1700)
   /robot/cmd_vel  geometry_msgs/Twist         lazo abierto, como en el firmware
   /robot/ruedas   std_msgs/Float32MultiArray  [izq, der] de -1 a 1
   /robot/parada   std_msgs/Bool               parada de emergencia enclavada
@@ -40,7 +40,7 @@ from std_msgs.msg import Bool, Float32MultiArray, Float64, Int32, String
 # --- Mismos valores que firmware/robot_receptor/src/config.h ---
 ESC_APAGADO = 1000
 ESC_MIN = 1100
-ESC_MAX = 2000
+ESC_MAX = 1700          # tope de seguridad, igual que en config.h
 ESC_PASO_RAMPA = 20
 ESC_INTERVALO_RAMPA = 0.2
 ESC_TIEMPO_ARMADO = 3.0
@@ -86,16 +86,18 @@ class FirmwareSimulado(Node):
         super().__init__('robot_trepador')
         self.declare_parameter('v_max', 0.30)           # V_MAX_MS
         self.declare_parameter('ancho_via', 0.15)       # ANCHO_VIA_M
-        self.declare_parameter('empuje_max_n', 10.0)    # N por hélice a 2000 us
+        self.declare_parameter('empuje_max_n', 10.0)    # N por hélice a ESC_MAX (1700 us)
         self.declare_parameter('reparto_delantera', 1.0)  # fracción del empuje en la hélice delantera
         self.declare_parameter('bat_celdas', 2)
         self.declare_parameter('bat_mah', 2200.0)
         self.declare_parameter('bat_carga_inicial', 0.95)  # 0..1
-        self.declare_parameter('bat_amp_motor', 12.0)      # A de cada A2217 a fondo
+        self.declare_parameter('bat_amp_motor', 24.0)      # A de cada A2217 a ESC_MAX (1700 us)
+        self.declare_parameter('bat_mohm_celda', 10.0)     # resistencia interna por celda
         self.bat_celdas = int(self.get_parameter('bat_celdas').value)
         self.bat_ah = float(self.get_parameter('bat_mah').value) / 1000.0
         self.bat_soc = float(self.get_parameter('bat_carga_inicial').value)
         self.bat_amp_motor = float(self.get_parameter('bat_amp_motor').value)
+        self.bat_r_celda = float(self.get_parameter('bat_mohm_celda').value) / 1000.0
         self.bat_v = None
         self.bat_nivel = 0
         self.t_bat = time.monotonic()
@@ -239,7 +241,7 @@ class FirmwareSimulado(Node):
                      + 0.3 * (abs(self.pwm_izq) + abs(self.pwm_der)) / MOTOR_PWM_MAX)
         self.bat_soc = max(0.0, self.bat_soc - corriente * dt / 3600.0 / self.bat_ah)
         v_celda_reposo = interpolar(self.bat_soc * 100, CURVA_PCT, CURVA_V)
-        v = self.bat_celdas * v_celda_reposo - corriente * 0.02 * self.bat_celdas
+        v = self.bat_celdas * v_celda_reposo - corriente * self.bat_r_celda * self.bat_celdas
         # mismo filtro que el firmware (10 Hz, 0,1) pasado a 50 Hz
         self.bat_v = v if self.bat_v is None else self.bat_v + 0.02 * (v - self.bat_v)
         vc = self.bat_v / self.bat_celdas

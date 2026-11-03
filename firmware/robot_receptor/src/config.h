@@ -30,7 +30,9 @@ static const uint8_t MAC_PUENTE[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 // ---------------- ESC (hélices) ----------------
 #define ESC_APAGADO             1000   // us
 #define ESC_MIN                 1100   // us
-#define ESC_MAX                 2000   // us
+// LÍMITE DE SEGURIDAD: por encima de 1700 us los A2217 pasan de ~23-25 A y se
+// pueden quemar. El robot recorta cualquier orden mayor, venga de donde venga.
+#define ESC_MAX                 1700   // us
 #define ESC_PASO_RAMPA          20     // us por paso
 #define ESC_INTERVALO_RAMPA_MS  200    // ms entre pasos
 #define ESC_TIEMPO_ARMADO_MS    3000   // 1000 us al arrancar para armar

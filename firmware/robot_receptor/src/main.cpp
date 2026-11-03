@@ -6,7 +6,7 @@
   Nodo: /robot/robot_trepador
 
   SUSCRIPCIONES (órdenes desde el PC)
-    /robot/esc       std_msgs/Int32              us para los ESC: 1000 = apagar, 1100..2000 = velocidad (con rampa)
+    /robot/esc       std_msgs/Int32              us para los ESC: 1000 = apagar, 1100..1700 = velocidad (con rampa; tope ESC_MAX)
     /robot/cmd_vel   geometry_msgs/Twist         linear.x (m/s) y angular.z (rad/s), lazo abierto
     /robot/ruedas    std_msgs/Float32MultiArray  [izq, der] de -1.0 a 1.0 (control directo del PWM)
     /robot/parada    std_msgs/Bool               true = parada de emergencia enclavada, false = liberar

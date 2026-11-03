@@ -29,6 +29,7 @@ from sensor_msgs.msg import Imu
 
 ESC_APAGADO = 1000
 ESC_PASO = 100
+ESC_LIMITE = 1700     # tope de seguridad (~23-25 A por motor); el firmware también lo aplica
 
 
 # ============================================================
@@ -39,14 +40,16 @@ class NodoInterfaz(Node):
         super().__init__('interfaz_robot')
         self.declare_parameter('v_lineal', 0.15)     # m/s al pulsar adelante/atrás
         self.declare_parameter('v_angular', 1.5)     # rad/s al pulsar izquierda/derecha
-        self.declare_parameter('esc_max', 1800)      # tope del botón "+"
+        self.declare_parameter('esc_max', ESC_LIMITE)  # tope del botón "+" (nunca más de ESC_LIMITE)
 
         self.lock = threading.Lock()
         self.lin = 0          # -1, 0, +1
         self.ang = 0          # -1, 0, +1
         self.v_lineal = self.get_parameter('v_lineal').value
         self.v_angular = self.get_parameter('v_angular').value
-        self.esc_max = int(self.get_parameter('esc_max').value)
+        self.esc_max = min(int(self.get_parameter('esc_max').value), ESC_LIMITE)
+        if int(self.get_parameter('esc_max').value) > ESC_LIMITE:
+            self.get_logger().warn(f'esc_max recortado a {ESC_LIMITE} us (límite de corriente de los A2217)')
         self.esc = ESC_APAGADO
         self.parada = False
 
