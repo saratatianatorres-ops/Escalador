@@ -1,0 +1,96 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded: ~
+      Splitter Ratio: 0.5
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Suelo
+      Enabled: true
+      Cell Size: 0.1
+      Plane: XY
+      Plane Cell Count: 20
+      Color: 160; 160; 164
+      Alpha: 0.5
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Class: rviz_default_plugins/RobotModel
+      Name: Robot
+      Enabled: true
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_description
+      Visual Enabled: true
+      Collision Enabled: false
+      Alpha: 1
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: false
+      Show Names: false
+      Show Axes: true
+      Show Arrows: false
+      Marker Scale: 0.3
+      Value: false
+    - Class: rviz_default_plugins/Odometry
+      Name: Recorrido
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot/odom
+      Keep: 300
+      Position Tolerance: 0.02
+      Angle Tolerance: 0.2
+      Shape:
+        Value: Axes
+        Axes Length: 0.04
+        Axes Radius: 0.004
+      Covariance:
+        Value: false
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 30; 34; 42
+    Fixed Frame: odom
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/Measure
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Distance: 1.4
+      Focal Point:
+        X: 0.3
+        Y: 0
+        Z: 0.2
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Near Clip Distance: 0.01
+      Pitch: 0.45
+      Yaw: 3.7
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+    Saved: ~
+Window Geometry:
+  Height: 800
+  Width: 1200
+  X: 60
+  Y: 60

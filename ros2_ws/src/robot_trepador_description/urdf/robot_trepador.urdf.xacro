@@ -1,0 +1,239 @@
+<?xml version="1.0"?>
+<!--
+  Robot trepador: chasis, 4 ruedas (2 por lado unidas por correa, un N20 por lado),
+  2 hélices encima (ESC en paralelo) e IMU MPU6050.
+
+  Ejes del robot: x adelante, y izquierda, z arriba (la cara de las hélices).
+  Medidas tomadas de claude/fisica_transiciones.md y de firmware/robot_receptor/src/config.h.
+
+  sim:=true añade los plugins de Gazebo (Harmonic): tracción diferencial, hélices,
+  IMU, odometría y estado de las articulaciones.
+-->
+<robot name="escalador" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="sim" default="false"/>
+
+  <!-- ================= Medidas (cámbialas aquí) ================= -->
+  <xacro:property name="largo"        value="0.20"/>   <!-- chasis, m -->
+  <xacro:property name="ancho"        value="0.11"/>
+  <xacro:property name="alto"         value="0.03"/>
+  <xacro:property name="masa_chasis"  value="0.60"/>   <!-- + 4 ruedas + 2 hélices = 0,8 kg -->
+
+  <xacro:property name="r_rueda"      value="0.035"/>
+  <xacro:property name="ancho_rueda"  value="0.02"/>
+  <xacro:property name="masa_rueda"   value="0.04"/>
+  <xacro:property name="eje_x"        value="0.095"/>  <!-- ejes delantero y trasero a ±9,5 cm -->
+  <xacro:property name="via"          value="0.15"/>   <!-- ANCHO_VIA_M del firmware -->
+  <xacro:property name="par_rueda"    value="0.2"/>    <!-- N·m máximo por rueda -->
+  <xacro:property name="vel_rueda"    value="20"/>     <!-- rad/s máximo -->
+  <xacro:property name="mu_rueda"     value="1.0"/>    <!-- fricción goma/superficie -->
+
+  <xacro:property name="helice_del_x" value="0.04"/>   <!-- hélice delantera +4 cm -->
+  <xacro:property name="helice_tra_x" value="-0.09"/>  <!-- hélice trasera −9 cm -->
+  <xacro:property name="altura_motor" value="0.03"/>
+  <xacro:property name="d_helice"     value="0.127"/>  <!-- 5 pulgadas -->
+  <xacro:property name="masa_helice"  value="0.02"/>
+
+  <!-- ================= Materiales ================= -->
+  <material name="azul">    <color rgba="0.23 0.44 0.71 1"/></material>
+  <material name="naranja"> <color rgba="0.94 0.55 0.16 1"/></material>
+  <material name="negro">   <color rgba="0.12 0.12 0.14 1"/></material>
+  <material name="gris">    <color rgba="0.55 0.57 0.60 1"/></material>
+  <material name="helice">  <color rgba="0.85 0.85 0.90 0.6"/></material>
+
+  <!-- ================= Chasis ================= -->
+  <link name="base_link">
+    <visual>
+      <geometry><box size="${largo} ${ancho} ${alto}"/></geometry>
+      <material name="azul"/>
+    </visual>
+    <!-- franja naranja = delante (igual que en la vista 3D de la interfaz) -->
+    <visual>
+      <origin xyz="${largo/2 - 0.005} 0 0"/>
+      <geometry><box size="0.01 ${ancho + 0.002} ${alto + 0.002}"/></geometry>
+      <material name="naranja"/>
+    </visual>
+    <collision>
+      <geometry><box size="${largo} ${ancho} ${alto}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="${masa_chasis}"/>
+      <inertia ixx="${masa_chasis*(ancho*ancho + alto*alto)/12}" ixy="0" ixz="0"
+               iyy="${masa_chasis*(largo*largo + alto*alto)/12}" iyz="0"
+               izz="${masa_chasis*(largo*largo + ancho*ancho)/12}"/>
+    </inertial>
+  </link>
+
+  <!-- ================= Ruedas ================= -->
+  <xacro:macro name="rueda" params="nombre x y">
+    <link name="rueda_${nombre}">
+      <visual>
+        <origin rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${r_rueda}" length="${ancho_rueda}"/></geometry>
+        <material name="negro"/>
+      </visual>
+      <!-- marca para ver girar la rueda -->
+      <visual>
+        <origin xyz="${r_rueda*0.6} 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><box size="${r_rueda*0.6} 0.006 ${ancho_rueda + 0.002}"/></geometry>
+        <material name="gris"/>
+      </visual>
+      <collision>
+        <origin rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${r_rueda}" length="${ancho_rueda}"/></geometry>
+      </collision>
+      <inertial>
+        <mass value="${masa_rueda}"/>
+        <inertia ixx="${masa_rueda*(3*r_rueda*r_rueda + ancho_rueda*ancho_rueda)/12}" ixy="0" ixz="0"
+                 iyy="${masa_rueda*r_rueda*r_rueda/2}" iyz="0"
+                 izz="${masa_rueda*(3*r_rueda*r_rueda + ancho_rueda*ancho_rueda)/12}"/>
+      </inertial>
+    </link>
+    <joint name="rueda_${nombre}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="rueda_${nombre}"/>
+      <origin xyz="${x} ${y} 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="${par_rueda}" velocity="${vel_rueda}"/>
+    </joint>
+    <gazebo reference="rueda_${nombre}">
+      <mu1>${mu_rueda}</mu1>
+      <mu2>${mu_rueda}</mu2>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:rueda nombre="del_izq" x="${eje_x}"  y="${via/2}"/>
+  <xacro:rueda nombre="del_der" x="${eje_x}"  y="${-via/2}"/>
+  <xacro:rueda nombre="tra_izq" x="${-eje_x}" y="${via/2}"/>
+  <xacro:rueda nombre="tra_der" x="${-eje_x}" y="${-via/2}"/>
+
+  <!-- ================= Hélices ================= -->
+  <!-- El eje de la articulación apunta a −z: el empuje positivo aprieta el robot
+       contra la superficie (el aire sale hacia arriba). -->
+  <xacro:macro name="helice" params="nombre x">
+    <link name="motor_${nombre}">
+      <visual>
+        <origin xyz="0 0 ${altura_motor/2}"/>
+        <geometry><cylinder radius="0.014" length="${altura_motor}"/></geometry>
+        <material name="gris"/>
+      </visual>
+      <inertial>
+        <origin xyz="0 0 ${altura_motor/2}"/>
+        <mass value="0.001"/>
+        <inertia ixx="1e-7" ixy="0" ixz="0" iyy="1e-7" iyz="0" izz="1e-7"/>
+      </inertial>
+    </link>
+    <joint name="motor_${nombre}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="motor_${nombre}"/>
+      <origin xyz="${x} 0 ${alto/2}"/>
+    </joint>
+
+    <link name="helice_${nombre}">
+      <visual>
+        <geometry><cylinder radius="${d_helice/2}" length="0.002"/></geometry>
+        <material name="helice"/>
+      </visual>
+      <visual>
+        <geometry><box size="${d_helice} 0.012 0.004"/></geometry>
+        <material name="naranja"/>
+      </visual>
+      <inertial>
+        <mass value="${masa_helice}"/>
+        <inertia ixx="${masa_helice*d_helice*d_helice/48}" ixy="0" ixz="0"
+                 iyy="${masa_helice*d_helice*d_helice/48}" iyz="0"
+                 izz="${masa_helice*d_helice*d_helice/24}"/>
+      </inertial>
+    </link>
+    <joint name="helice_${nombre}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="helice_${nombre}"/>
+      <origin xyz="${x} 0 ${alto/2 + altura_motor}"/>
+      <axis xyz="0 0 -1"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:helice nombre="delantera" x="${helice_del_x}"/>
+  <xacro:helice nombre="trasera"   x="${helice_tra_x}"/>
+
+  <!-- ================= IMU (MPU6050) ================= -->
+  <link name="imu_link"/>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 ${alto/2}"/>
+  </joint>
+
+  <!-- ================= Plugins de Gazebo Harmonic ================= -->
+  <xacro:if value="$(arg sim)">
+    <gazebo reference="base_link">
+      <mu1>0.3</mu1>
+      <mu2>0.3</mu2>
+    </gazebo>
+
+    <gazebo reference="imu_link">
+      <sensor name="imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>50</update_rate>
+        <topic>/robot/imu_gz</topic>
+        <gz_frame_id>imu_link</gz_frame_id>
+      </sensor>
+    </gazebo>
+
+    <gazebo>
+      <!-- Tracción: las dos ruedas de cada lado giran juntas (correa) -->
+      <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+        <left_joint>rueda_del_izq_joint</left_joint>
+        <left_joint>rueda_tra_izq_joint</left_joint>
+        <right_joint>rueda_del_der_joint</right_joint>
+        <right_joint>rueda_tra_der_joint</right_joint>
+        <wheel_separation>${via}</wheel_separation>
+        <wheel_radius>${r_rueda}</wheel_radius>
+        <topic>/model/escalador/cmd_vel</topic>
+        <odom_topic>/model/escalador/odometria_plana</odom_topic>
+        <tf_topic>/model/escalador/tf_plana</tf_topic>
+      </plugin>
+
+      <!-- Hélices: reciben el empuje en N (std_msgs/Float64 desde ROS) -->
+      <plugin filename="gz-sim-thruster-system" name="gz::sim::systems::Thruster">
+        <namespace>escalador</namespace>
+        <joint_name>helice_delantera_joint</joint_name>
+        <topic>empuje_delantero</topic>
+        <thrust_coefficient>0.1</thrust_coefficient>
+        <fluid_density>1.2</fluid_density>
+        <propeller_diameter>${d_helice}</propeller_diameter>
+        <velocity_control>true</velocity_control>
+        <use_angvel_cmd>false</use_angvel_cmd>
+        <min_thrust_cmd>0</min_thrust_cmd>
+        <max_thrust_cmd>30</max_thrust_cmd>
+      </plugin>
+      <plugin filename="gz-sim-thruster-system" name="gz::sim::systems::Thruster">
+        <namespace>escalador</namespace>
+        <joint_name>helice_trasera_joint</joint_name>
+        <topic>empuje_trasero</topic>
+        <thrust_coefficient>0.1</thrust_coefficient>
+        <fluid_density>1.2</fluid_density>
+        <propeller_diameter>${d_helice}</propeller_diameter>
+        <velocity_control>true</velocity_control>
+        <use_angvel_cmd>false</use_angvel_cmd>
+        <min_thrust_cmd>0</min_thrust_cmd>
+        <max_thrust_cmd>30</max_thrust_cmd>
+      </plugin>
+
+      <!-- Posición real en 3D (también en la pared y el techo) para RViz -->
+      <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+        <odom_frame>odom</odom_frame>
+        <robot_base_frame>base_link</robot_base_frame>
+        <odom_publish_frequency>50</odom_publish_frequency>
+        <dimensions>3</dimensions>
+        <odom_topic>/model/escalador/odometria</odom_topic>
+        <tf_topic>/model/escalador/tf</tf_topic>
+      </plugin>
+
+      <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+        <topic>/model/escalador/joint_states</topic>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+</robot>

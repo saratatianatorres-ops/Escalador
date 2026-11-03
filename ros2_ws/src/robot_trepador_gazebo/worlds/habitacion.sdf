@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--
+  Habitación de prueba: suelo, pared delante del robot (x = 0,8 m) y techo a 1 m.
+  Es la misma situación que se simuló en MuJoCo (claude/fisica_transiciones.md):
+  esquinas interiores suelo → pared → techo. Fricción de las superficies = 1,0.
+-->
+<sdf version="1.9">
+  <world name="habitacion">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+
+    <gravity>0 0 -9.81</gravity>
+
+    <light type="directional" name="sol">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.4 0.3 -0.9</direction>
+    </light>
+
+    <!-- Suelo -->
+    <model name="suelo">
+      <static>true</static>
+      <link name="link">
+        <collision name="col">
+          <pose>0 0 -0.05 0 0 0</pose>
+          <geometry><box><size>3 3 0.1</size></box></geometry>
+          <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+        </collision>
+        <visual name="vis">
+          <pose>0 0 -0.05 0 0 0</pose>
+          <geometry><box><size>3 3 0.1</size></box></geometry>
+          <material><ambient>0.55 0.55 0.52 1</ambient><diffuse>0.65 0.65 0.62 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Pared: cara interior en x = 0,8 -->
+    <model name="pared">
+      <static>true</static>
+      <pose>0.85 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>0.1 3 1.2</size></box></geometry>
+          <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.1 3 1.2</size></box></geometry>
+          <material><ambient>0.75 0.72 0.65 1</ambient><diffuse>0.85 0.82 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Techo: cara interior en z = 1,0 (semitransparente para ver al robot) -->
+    <model name="techo">
+      <static>true</static>
+      <pose>0 0 1.05 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>3 3 0.1</size></box></geometry>
+          <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>3 3 0.1</size></box></geometry>
+          <transparency>0.6</transparency>
+          <material><ambient>0.7 0.75 0.8 0.4</ambient><diffuse>0.7 0.75 0.8 0.4</diffuse></material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
