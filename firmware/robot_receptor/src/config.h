@@ -20,8 +20,8 @@ static const uint8_t MAC_PUENTE[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 // ---------------- Pines ----------------
 #define PIN_ESC   18   // señal de los dos ESC (en paralelo)
-#define PIN_AIN1  26   // DRV8833 motor A (izquierdo)
-#define PIN_AIN2  25
+#define PIN_AIN1  25   // DRV8833 motor A (izquierdo) - igual que hardware/esquematico.jpg
+#define PIN_AIN2  26
 #define PIN_BIN1  33   // DRV8833 motor B (derecho)
 #define PIN_BIN2  32
 #define PIN_SDA   21   // MPU6050

@@ -20,7 +20,7 @@
     - Sin órdenes de ruedas durante 0,5 s        -> ruedas frenadas
     - Se pierde el agente / el enlace ESP-NOW    -> todo apagado y reconexión automática
 
-  Pines: ESC=18 | DRV8833 AIN1=26 AIN2=25 BIN1=33 BIN2=32 | MPU6050 SDA=21 SCL=22
+  Pines: ESC=18 | DRV8833 AIN1=25 AIN2=26 BIN1=33 BIN2=32 | MPU6050 SDA=21 SCL=22
 */
 
 #include <Arduino.h>

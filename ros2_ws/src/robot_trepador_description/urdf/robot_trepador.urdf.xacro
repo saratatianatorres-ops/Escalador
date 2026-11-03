@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!--
-  Robot trepador: chasis, 4 ruedas (2 por lado unidas por correa, un N20 por lado),
+  Robot trepador: chasis, 4 ruedas con un N20 cada una (los dos de cada lado en paralelo
+  en la misma salida del DRV8833),
   2 hélices encima (ESC en paralelo) e IMU MPU6050.
 
   Ejes del robot: x adelante, y izquierda, z arriba (la cara de las hélices).
@@ -181,7 +182,7 @@
     </gazebo>
 
     <gazebo>
-      <!-- Tracción: las dos ruedas de cada lado giran juntas (correa) -->
+      <!-- Tracción diferencial: los dos N20 de cada lado reciben la misma orden -->
       <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
         <left_joint>rueda_del_izq_joint</left_joint>
         <left_joint>rueda_tra_izq_joint</left_joint>
