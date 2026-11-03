@@ -67,6 +67,22 @@ gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msg
 
 Se sostiene con las hélices y sube con ▲ hasta la esquina del techo.
 
+**Probar en el techo** (boca abajo, con las hélices ya en 1700 µs):
+
+```bash
+gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msgs.Boolean \
+  --timeout 3000 --req 'name: "escalador", position: {x: 0.0, z: 0.978}, orientation: {w: 0.0, x: 1.0}'
+```
+
+Se queda pegado al techo y avanza con ▲ hasta la pared. Si bajas las hélices, se cae.
+
+**Volver al suelo:**
+
+```bash
+gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msgs.Boolean \
+  --timeout 3000 --req 'name: "escalador", position: {x: 0.0, z: 0.03}, orientation: {w: 1.0}'
+```
+
 ### Qué reproduce Gazebo y qué no
 
 Probado con el modelo de tus dos bases:

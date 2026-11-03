@@ -25,6 +25,7 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def lanzar_gazebo(context):
@@ -38,6 +39,11 @@ def lanzar_gazebo(context):
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')),
         launch_arguments={'gz_args': args, 'on_exit_shutdown': 'true'}.items())]
+
+
+def num(nombre):
+    """Argumento del launch como número decimal (acepta 5000 o 5000.0)."""
+    return ParameterValue(LaunchConfiguration(nombre), value_type=float)
 
 
 def generate_launch_description():
@@ -87,17 +93,18 @@ def generate_launch_description():
              parameters=[{'config_file': os.path.join(gz, 'config', 'puente_gz.yaml')}, sim_time]),
 
         Node(package='robot_trepador_gazebo', executable='firmware_simulado', output='screen',
-             parameters=[{'empuje_max_n': LaunchConfiguration('empuje_max_n'),
-                          'reparto_delantera': LaunchConfiguration('reparto_delantera'),
-                          'bat_celdas': LaunchConfiguration('bat_celdas'),
-                          'bat_mah': LaunchConfiguration('bat_mah'),
-                          'bat_carga_inicial': LaunchConfiguration('bat_carga_inicial')}]),
+             # value_type: así bat_mah:=5000 (sin decimales) también funciona
+             parameters=[{'empuje_max_n': num('empuje_max_n'),
+                          'reparto_delantera': num('reparto_delantera'),
+                          'bat_celdas': ParameterValue(LaunchConfiguration('bat_celdas'), value_type=int),
+                          'bat_mah': num('bat_mah'),
+                          'bat_carga_inicial': num('bat_carga_inicial')}]),
 
         Node(package='rviz2', executable='rviz2', output='screen',
              arguments=['-d', os.path.join(desc, 'rviz', 'robot.rviz')],
              parameters=[sim_time], condition=IfCondition(LaunchConfiguration('rviz'))),
 
         Node(package='robot_trepador_gui', executable='interfaz', output='screen',
-             parameters=[{'esc_max': LaunchConfiguration('esc_max')}],
+             parameters=[{'esc_max': ParameterValue(LaunchConfiguration('esc_max'), value_type=int)}],
              condition=IfCondition(LaunchConfiguration('interfaz'))),
     ])

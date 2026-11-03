@@ -15,6 +15,7 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -34,7 +35,7 @@ def generate_launch_description():
              output='screen', condition=IfCondition(LaunchConfiguration('agente'))),
 
         Node(package='robot_trepador_gui', executable='interfaz', output='screen',
-             parameters=[{'esc_max': LaunchConfiguration('esc_max')}]),
+             parameters=[{'esc_max': ParameterValue(LaunchConfiguration('esc_max'), value_type=int)}]),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(
