@@ -20,6 +20,10 @@ Reproduce: armado de 3 s, rampa del ESC (20 us cada 200 ms, salto directo a 1100
 timeouts (ESC 2 s, ruedas 0,5 s), parada enclavada, PWM mínimo de arranque de los N20
 y velocidad ≈ pwm / 1023 · v_max. Los dos ESC van en paralelo, así que las dos hélices
 reciben el mismo empuje.
+
+Batería simulada: LiPo de `bat_celdas` celdas y `bat_mah` mAh que se descarga según el acelerador
+(hasta `bat_amp_motor` A por motor a fondo). La tensión cae con la corriente (resistencia interna),
+y el porcentaje y los avisos se calculan igual que en firmware/robot_receptor/src/bateria.cpp.
 """
 
 import json
@@ -44,6 +48,22 @@ ESC_TIMEOUT = 2.0
 MOTOR_PWM_MAX = 1023
 MOTOR_PWM_MIN_ARRANQUE = 300
 MOTORES_TIMEOUT = 0.5
+BAT_V_CELDA_BAJA = 3.50
+BAT_V_CELDA_CRITICA = 3.30
+CURVA_V = (3.30, 3.50, 3.68, 3.74, 3.80, 3.87, 3.95, 4.05, 4.20)
+CURVA_PCT = (0, 5, 20, 35, 50, 65, 80, 92, 100)
+
+
+def interpolar(x, xs, ys):
+    if x <= xs[0]:
+        return ys[0]
+    if x >= xs[-1]:
+        return ys[-1]
+    for i in range(1, len(xs)):
+        if x <= xs[i]:
+            f = (x - xs[i - 1]) / (xs[i] - xs[i - 1])
+            return ys[i - 1] + f * (ys[i] - ys[i - 1])
+    return ys[-1]
 
 
 def euler_grados(w, x, y, z):
@@ -68,6 +88,17 @@ class FirmwareSimulado(Node):
         self.declare_parameter('ancho_via', 0.15)       # ANCHO_VIA_M
         self.declare_parameter('empuje_max_n', 10.0)    # N por hélice a 2000 us
         self.declare_parameter('reparto_delantera', 1.0)  # fracción del empuje en la hélice delantera
+        self.declare_parameter('bat_celdas', 2)
+        self.declare_parameter('bat_mah', 2200.0)
+        self.declare_parameter('bat_carga_inicial', 0.95)  # 0..1
+        self.declare_parameter('bat_amp_motor', 12.0)      # A de cada A2217 a fondo
+        self.bat_celdas = int(self.get_parameter('bat_celdas').value)
+        self.bat_ah = float(self.get_parameter('bat_mah').value) / 1000.0
+        self.bat_soc = float(self.get_parameter('bat_carga_inicial').value)
+        self.bat_amp_motor = float(self.get_parameter('bat_amp_motor').value)
+        self.bat_v = None
+        self.bat_nivel = 0
+        self.t_bat = time.monotonic()
         self.v_max = float(self.get_parameter('v_max').value)
         self.via = float(self.get_parameter('ancho_via').value)
         self.empuje_max = float(self.get_parameter('empuje_max_n').value)
@@ -199,6 +230,26 @@ class FirmwareSimulado(Node):
         empuje = acelerador * self.empuje_max
         self.pub_del.publish(Float64(data=empuje * self.reparto_del))
         self.pub_tra.publish(Float64(data=empuje))
+        self._bateria(acelerador, ahora)
+
+    def _bateria(self, acelerador, ahora):
+        dt = ahora - self.t_bat
+        self.t_bat = ahora
+        corriente = (0.4 + 2 * self.bat_amp_motor * acelerador ** 1.5
+                     + 0.3 * (abs(self.pwm_izq) + abs(self.pwm_der)) / MOTOR_PWM_MAX)
+        self.bat_soc = max(0.0, self.bat_soc - corriente * dt / 3600.0 / self.bat_ah)
+        v_celda_reposo = interpolar(self.bat_soc * 100, CURVA_PCT, CURVA_V)
+        v = self.bat_celdas * v_celda_reposo - corriente * 0.02 * self.bat_celdas
+        # mismo filtro que el firmware (10 Hz, 0,1) pasado a 50 Hz
+        self.bat_v = v if self.bat_v is None else self.bat_v + 0.02 * (v - self.bat_v)
+        vc = self.bat_v / self.bat_celdas
+        if vc < BAT_V_CELDA_CRITICA:
+            self.bat_nivel = 2
+        elif vc < BAT_V_CELDA_BAJA:
+            if self.bat_nivel == 0 or (self.bat_nivel == 2 and vc > BAT_V_CELDA_CRITICA + 0.05):
+                self.bat_nivel = 1
+        elif vc > BAT_V_CELDA_BAJA + 0.05:
+            self.bat_nivel = 0
 
     def _publicar_estado(self):
         ahora = time.monotonic()
@@ -221,6 +272,12 @@ class FirmwareSimulado(Node):
             'imu': {'ok': imu_ok, 'roll': round(roll, 1), 'pitch': round(pitch, 1),
                     'yaw': round(yaw, 1), 'temp': 25.0, 'err': 0},
             'enlace': {'rx': sum(self.n.values()), 'tx': 0, 'fallos': 0, 'desc': 0, 'conex': 1},
+            'bat': {'ok': self.bat_v is not None,
+                    'v': round(self.bat_v or 0.0, 2),
+                    'vc': round((self.bat_v or 0.0) / self.bat_celdas, 2),
+                    'pct': int(round(interpolar((self.bat_v or 0.0) / self.bat_celdas,
+                                                CURVA_V, CURVA_PCT))),
+                    'nivel': self.bat_nivel, 'celdas': self.bat_celdas},
             'sim': True,
         }
         self.pub_estado.publish(String(data=json.dumps(estado, separators=(',', ':'))))

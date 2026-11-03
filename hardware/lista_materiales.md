@@ -18,6 +18,8 @@ hélice**. Pesa el robot armado y mide el empuje de cada A2217 sobre una balanza
 | 1 | Módulo MPU6050 | IMU (orientación) | ~2 | | | |
 | 1 | LM2596 ajustable (salida 5 V) | Regulador para ESP32 y N20 | ~20 | | | |
 | 1 | Batería LiPo (___ S, ___ mAh) | Alimentación | | | | |
+| 1 + 1 | Resistencias 100 kΩ y 33 kΩ (22 kΩ si es 3S) | Divisor para medir la batería (IO34) | | | | |
+| 1 | Condensador cerámico 100 nF | Filtro del divisor | | | | |
 | 3 | Bornera de 3 pines (J1, J2, J3) | ESC y motores | | | | |
 | 1 | Placa de cobre (PCB de una cara) | Placa del robot | | | | |
 | 1 | Chasis | | | | | |

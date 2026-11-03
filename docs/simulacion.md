@@ -27,7 +27,8 @@ parada de emergencia, PWM mínimo de los N20 y `/robot/estado` con el mismo JSON
 no sabe si habla con el robot o con Gazebo.
 
 Opciones: `rviz:=false`, `interfaz:=false`, `gazebo_gui:=false` (solo servidor),
-`empuje_max_n:=12.0` (N por hélice a 2000 µs), `x:= y:= yaw:=` (dónde aparece),
+`empuje_max_n:=12.0` (N por hélice a 2000 µs), `bat_celdas:=2 bat_mah:=2200 bat_carga_inicial:=0.95`
+(batería simulada: se descarga según el acelerador; con `bat_carga_inicial:=0.15` ves los avisos), `x:= y:= yaw:=` (dónde aparece),
 `reparto_delantera:=0.0` (apaga la hélice delantera y deja la trasera; hoy los ESC van en
 paralelo, así que el robot real siempre usa 1.0).
 

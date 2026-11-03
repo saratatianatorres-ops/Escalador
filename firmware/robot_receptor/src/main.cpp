@@ -13,14 +13,14 @@
 
   PUBLICACIONES (telemetría hacia el PC)
     /robot/imu       sensor_msgs/Imu             MPU6050: orientación, giro y aceleración (50 Hz)
-    /robot/estado    std_msgs/String (JSON)      todo lo que el robot recibió y aplicó (5 Hz)
+    /robot/estado    std_msgs/String (JSON)      todo lo que el robot recibió y aplicó, y la batería (5 Hz)
 
   SEGURIDAD
     - Sin órdenes de /robot/esc durante 2 s      -> hélices apagadas (reenvía la orden periódicamente)
     - Sin órdenes de ruedas durante 0,5 s        -> ruedas frenadas
     - Se pierde el agente / el enlace ESP-NOW    -> todo apagado y reconexión automática
 
-  Pines: ESC=18 | DRV8833 AIN1=25 AIN2=26 BIN1=33 BIN2=32 | MPU6050 SDA=21 SCL=22
+  Pines: ESC=18 | DRV8833 AIN1=25 AIN2=26 BIN1=33 BIN2=32 | MPU6050 SDA=21 SCL=22 | Batería=34
 */
 
 #include <Arduino.h>
@@ -42,6 +42,7 @@
 #include "transporte_espnow.h"
 #include "actuadores.h"
 #include "imu.h"
+#include "bateria.h"
 
 // ---------------- Utilidades ----------------
 #define RCCHECK(fn) { rcl_ret_t rc = fn; if (rc != RCL_RET_OK) { \
@@ -68,7 +69,7 @@ static sensor_msgs__msg__Imu             msgImu;
 static std_msgs__msg__String             msgEstado;
 
 static float bufRuedas[4];
-static char  bufEstado[480];
+static char  bufEstado[640];
 
 // Contadores de lo recibido (se reportan en /robot/estado)
 static struct {
@@ -219,6 +220,7 @@ static void publicarEstado() {
   const EstadoActuadores &a = actuadoresEstado();
   const DatosImu &d = imuDatos();
   const EstadisticasEspNow &e = transporteEstadisticas();
+  const DatosBateria &b = bateriaDatos();
 
   int n = snprintf(bufEstado, sizeof(bufEstado),
     "{\"t\":%lu,\"parada\":%s,"
@@ -226,14 +228,16 @@ static void publicarEstado() {
     "\"ruedas\":{\"izq\":%.2f,\"der\":%.2f,\"pwm_izq\":%d,\"pwm_der\":%d,\"ms\":%ld,"
     "\"v\":%.2f,\"w\":%.2f,\"n_vel\":%lu,\"n_dir\":%lu},"
     "\"imu\":{\"ok\":%s,\"roll\":%.1f,\"pitch\":%.1f,\"yaw\":%.1f,\"temp\":%.1f,\"err\":%lu},"
-    "\"enlace\":{\"rx\":%lu,\"tx\":%lu,\"fallos\":%lu,\"desc\":%lu,\"conex\":%lu}}",
+    "\"enlace\":{\"rx\":%lu,\"tx\":%lu,\"fallos\":%lu,\"desc\":%lu,\"conex\":%lu},"
+    "\"bat\":{\"ok\":%s,\"v\":%.2f,\"vc\":%.2f,\"pct\":%d,\"nivel\":%d,\"celdas\":%d}}",
     (unsigned long)millis(), a.paradaActiva ? "true" : "false",
     rx.ultimoEsc, a.escObjetivo, a.escActual, msONeg(a.msDesdeOrdenEsc), (unsigned long)rx.esc,
     a.ruedaIzq, a.ruedaDer, a.pwmIzq, a.pwmDer, msONeg(a.msDesdeOrdenRuedas),
     rx.ultimoV, rx.ultimoW, (unsigned long)rx.cmdVel, (unsigned long)rx.ruedas,
     d.ok ? "true" : "false", d.roll, d.pitch, d.yaw, d.temperatura, (unsigned long)d.errores,
     (unsigned long)e.paquetesRx, (unsigned long)e.paquetesTx, (unsigned long)e.fallosTx,
-    (unsigned long)e.bytesDescartados, (unsigned long)conexiones);
+    (unsigned long)e.bytesDescartados, (unsigned long)conexiones,
+    b.medida ? "true" : "false", b.voltios, b.vCelda, b.porcentaje, (int)b.nivel, BAT_CELDAS);
 
   if (n < 0) return;
   msgEstado.data.size = min((size_t)n, sizeof(bufEstado) - 1);
@@ -248,6 +252,7 @@ void setup() {
 
   actuadoresIniciar();        // ESC a 1000 us y ruedas frenadas desde el arranque
   imuIniciar();
+  bateriaIniciar();
   prepararMensajes();
 
   if (!transporteRegistrar()) {
@@ -261,6 +266,7 @@ void setup() {
 void loop() {
   imuActualizar();
   actuadoresActualizar();
+  bateriaActualizar();
 
   switch (estadoAgente) {
     case ESPERANDO_AGENTE:
@@ -307,8 +313,9 @@ void loop() {
   CADA_MS(2000, {
     const EstadoActuadores &a = actuadoresEstado();
     const DatosImu &d = imuDatos();
-    Serial.printf("agente=%d esc=%d/%d ruedas=%d/%d roll=%.1f pitch=%.1f parada=%d\n",
+    const DatosBateria &b = bateriaDatos();
+    Serial.printf("agente=%d esc=%d/%d ruedas=%d/%d roll=%.1f pitch=%.1f parada=%d bat=%.2fV %d%%\n",
                   estadoAgente, a.escActual, a.escObjetivo, a.pwmIzq, a.pwmDer,
-                  d.roll, d.pitch, a.paradaActiva);
+                  d.roll, d.pitch, a.paradaActiva, b.voltios, b.porcentaje);
   });
 }

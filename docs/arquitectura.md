@@ -78,7 +78,7 @@ flowchart LR
 | `/robot/ruedas` | `std_msgs/Float32MultiArray` | (pruebas a mano) | robot | `[izq, der]` de −1 a 1, PWM directo |
 | `/robot/parada` | `std_msgs/Bool` | interfaz | robot | Parada de emergencia enclavada |
 | `/robot/imu` | `sensor_msgs/Imu` | robot | interfaz, odometria_imu | Orientación ya calculada en el robot. QoS de sensores (best effort) |
-| `/robot/estado` | `std_msgs/String` (JSON) | robot | interfaz, odometria_imu | Lo que el robot realmente aplicó (ESC, PWM, IMU, enlace) |
+| `/robot/estado` | `std_msgs/String` (JSON) | robot | interfaz, odometria_imu | Lo que el robot realmente aplicó (ESC, PWM, IMU, enlace) y la batería |
 | `/robot/odom` | `nav_msgs/Odometry` | odometria_imu / Gazebo | rviz2 | Pose 3D (estimada con el robot real, exacta en Gazebo) |
 | `/robot/odom_reiniciar` | `std_msgs/Bool` | (a mano) | odometria_imu | Pone la posición a cero |
 | `/joint_states` | `sensor_msgs/JointState` | odometria_imu / Gazebo | robot_state_publisher | Giro de ruedas y hélices |
@@ -94,6 +94,7 @@ El formato del JSON de `/robot/estado` está en [firmware.md](firmware.md).
 | Se pierde el agente o ESP-NOW (3 pings) | Todo apagado y reconexión automática | ESP32 |
 | PARADA (botón o espacio) | Apaga todo y bloquea hasta LIBERAR | ESP32 (enclavada) |
 | Arranque | ESC a 1000 µs durante 3 s (armado), ruedas frenadas | ESP32 |
+| Batería baja o crítica | Aviso amarillo o rojo en la interfaz. **No apaga nada** (en la pared se caería) | ESP32 mide, interfaz avisa |
 | Se cierra la interfaz | Manda apagar antes de salir; si no alcanza, actúan los timeouts | PC + ESP32 |
 
 Al estar en el robot, las protecciones funcionan aunque falle cualquier cosa del lado del PC.

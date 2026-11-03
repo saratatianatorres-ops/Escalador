@@ -23,6 +23,7 @@ flowchart LR
     DRV -->|"A: lado izquierdo"| NL(("2 × N20<br/>izquierda"))
     DRV -->|"B: lado derecho"| NR(("2 × N20<br/>derecha"))
     ESP <-->|"I2C: IO21 SDA, IO22 SCL"| IMU["MPU6050"]
+    BAT -->|"divisor 100k / 33k"| DIV["IO34 (ADC)"] --> ESP
 ```
 
 ## Conexiones (según el esquemático)
@@ -36,6 +37,7 @@ flowchart LR
 | IO32 | DRV8833 BIN2 | `PIN_BIN2 32` |
 | IO21 | MPU6050 SDA | `PIN_SDA 21` |
 | IO22 | MPU6050 SCL | `PIN_SCL 22` |
+| IO34 | Divisor de tensión de la batería (**hay que agregarlo**, ver abajo) | `PIN_BATERIA 34` |
 | 3V3 | MPU6050 VCC y DRV8833 STBY (driver siempre habilitado) | — |
 | EXT_5V | Salida del LM2596 (también alimenta VM del DRV8833) | — |
 
@@ -44,6 +46,24 @@ Salidas del DRV8833: AOUT1 y AOUT2 → J2 pines 1 y 2 (N20 izquierdos); BOUT1 �
 
 Si un lado gira al revés, no hace falta tocar la placa: cambia `MOTOR_IZQ_INVERTIDO` o
 `MOTOR_DER_INVERTIDO` en `firmware/robot_receptor/src/config.h`.
+
+## Medición de la batería (agregar a la placa)
+
+La interfaz muestra el voltaje y el porcentaje de la batería, pero la placa actual no tiene cómo
+medirlo. Agrega un divisor de tensión al IO34 (puedes soldarlo al aire mientras haces la siguiente PCB):
+
+```
+ + batería ──[ R1 100 kΩ ]──┬── IO34
+                            ├──[ R2 33 kΩ ]── GND
+                            └──[ 100 nF ]──── GND
+```
+
+- Con una LiPo **2S** (8,4 V llena), en el IO34 quedan 2,08 V. Para **3S** usa R2 = 22 kΩ y cambia
+  `BAT_R2_OHM` y `BAT_CELDAS` en `firmware/robot_receptor/src/config.h`.
+- Usa el IO34 (ADC1). Los pines del ADC2 no funcionan mientras la radio (ESP-NOW) está encendida.
+- **Calibración:** mide la batería con un multímetro y compárala con lo que muestra la interfaz. Pon
+  `BAT_CALIBRACION = multímetro / interfaz` (por ejemplo 7,90 / 7,78 = 1,015).
+- Sin el divisor, la interfaz muestra "sin medición" y el robot funciona igual.
 
 ## Para revisar antes de fabricar la siguiente versión
 
@@ -56,5 +76,4 @@ Si un lado gira al revés, no hace falta tocar la placa: cambia `MOTOR_IZQ_INVER
 - **Un pin por ESC.** Hoy los dos ESC comparten IO18, así que las dos hélices reciben siempre el mismo
   acelerador. Para el reparto de empuje que permite subir del suelo a la pared
   (`docs/fisica_transiciones.md`), lleva el segundo pad "ESC" de la PCB a un pin libre, por ejemplo el IO19.
-- **Batería.** No hay divisor de tensión hacia la ESP32, así que el robot no puede avisar de batería baja.
-  Un divisor (por ejemplo 100 k / 33 k) a un pin ADC1 libre, como el IO34, bastaría.
+- **Divisor de la batería** en el IO34, como se explica arriba.

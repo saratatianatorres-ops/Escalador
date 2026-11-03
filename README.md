@@ -46,7 +46,7 @@ Escalador/
 ## Paquetes de ROS 2
 
 ### `robot_trepador_gui`
-- Nodo `interfaz`: ruedas (▲ ▼ ◀ ▶ o W A S D), hélices (+ / −), PARADA (espacio) y vista 3D de la IMU.
+- Nodo `interfaz`: ruedas (▲ ▼ ◀ ▶ o W A S D), hélices (+ / −), batería, PARADA (espacio) y vista 3D de la IMU.
 - `robot.launch.py`: arranca el `micro_ros_agent` y la interfaz; con `rviz:=true`, también RViz.
 
 ### `robot_trepador_description`
@@ -95,6 +95,9 @@ Las dos ESP usan el canal 1 y se encuentran solas (no hace falta copiar MACs).
      deslizadores fijan la velocidad.
    - **+ / −**: hélices de 100 en 100 µs entre 1000 y `esc_max` (1800 por defecto). El robot sube en rampa;
      "en el robot" muestra el valor real.
+   - **Batería**: barra con el porcentaje, el voltaje total y por celda; se pone amarilla con batería baja y
+     roja (parpadeando) en estado crítico. Necesita el divisor de tensión en el IO34
+     ([hardware/README.md](hardware/README.md#medición-de-la-batería-agregar-a-la-placa)).
    - **PARADA** (o espacio): apaga hélices y ruedas y bloquea el robot hasta pulsar LIBERAR.
    - Vista 3D: la cara naranja es el frente. "Yaw a cero" alinea el giro, que deriva porque el MPU6050 no
      tiene brújula.

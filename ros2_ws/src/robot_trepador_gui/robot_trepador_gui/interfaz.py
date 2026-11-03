@@ -8,7 +8,7 @@ Publica:
   /robot/parada   std_msgs/Bool          al pulsar PARADA / LIBERAR
 Se suscribe a:
   /robot/imu      sensor_msgs/Imu        orientación 3D
-  /robot/estado   std_msgs/String (JSON) valores realmente aplicados en el robot
+  /robot/estado   std_msgs/String (JSON) valores realmente aplicados en el robot y batería
 
 Teclado: flechas o W/A/S/D para moverse (mantener pulsado),
          + / - para las hélices, espacio = PARADA.
@@ -221,6 +221,7 @@ class Interfaz:
 
         self._panel_movimiento(izq)
         self._panel_helices(izq)
+        self._panel_bateria(izq)
         self._panel_parada(izq)
         self._panel_imu(der)
 
@@ -293,6 +294,45 @@ class Interfaz:
                   **estilo).grid(row=0, column=2)
         self.lbl_esc_real = tk.Label(p, text='en el robot: —', bg=self.PANEL, fg=self.TENUE)
         self.lbl_esc_real.pack(padx=10, pady=(0, 8))
+
+    def _panel_bateria(self, padre):
+        p = self._panel(padre)
+        self._titulo(p, 'Batería')
+        self.lienzo_bat = tk.Canvas(p, width=240, height=26, bg=self.PANEL, highlightthickness=0)
+        self.lienzo_bat.pack(padx=10, pady=(2, 2))
+        self.lbl_bat = tk.Label(p, text='—', bg=self.PANEL, fg=self.TENUE,
+                                font=('TkFixedFont', 10))
+        self.lbl_bat.pack(padx=10, pady=(0, 8))
+
+    def _dibujar_bateria(self, bat, enlace):
+        """Barra de carga. bat = dict 'bat' de /robot/estado (o None)."""
+        c = self.lienzo_bat
+        c.delete('all')
+        c.create_rectangle(1, 3, 230, 23, outline=self.TENUE, width=2)   # cuerpo
+        c.create_rectangle(231, 9, 238, 17, fill=self.TENUE, outline='')  # borne
+
+        if not enlace or bat is None:
+            self.lbl_bat.config(text='sin datos del robot' if enlace else '—', fg=self.TENUE)
+            return
+        if not bat.get('ok'):
+            c.create_text(115, 13, text='sin medición', fill=self.TENUE)
+            self.lbl_bat.config(text='falta el divisor de tensión en IO34', fg=self.TENUE)
+            return
+
+        pct = max(0, min(100, int(bat.get('pct', 0))))
+        nivel = int(bat.get('nivel', 0))
+        color = ('#57ab5a', '#e0a526', '#e5534b')[min(nivel, 2)]
+        if nivel == 2 and int(time.monotonic() * 2) % 2:       # parpadeo en crítico
+            color = '#7a2b27'
+        ancho = int(226 * pct / 100)
+        if ancho > 0:
+            c.create_rectangle(4, 6, 4 + ancho, 20, fill=color, outline='')
+        c.create_text(115, 13, text=f'{pct} %', fill='white',
+                      font=('TkDefaultFont', 10, 'bold'))
+        self.lbl_bat.config(
+            text=f"{bat.get('v', 0):.2f} V  ·  {bat.get('vc', 0):.2f} V/celda "
+                 f"({bat.get('celdas', '?')}S)",
+            fg=self.TEXTO if nivel == 0 else color)
 
     def _panel_parada(self, padre):
         self.btn_parada = tk.Button(padre, text='PARADA (espacio)', height=2,
@@ -433,6 +473,9 @@ class Interfaz:
         else:
             self.lbl_esc_real.config(text='en el robot: —')
 
+        bat = est.get('bat') if enlace else None
+        self._dibujar_bateria(bat, enlace)
+
         if s['parada']:
             self.btn_parada.config(text='LIBERAR PARADA (espacio)', bg='#7f8c8d')
         else:
@@ -446,6 +489,10 @@ class Interfaz:
             partes.append(f"ESP-NOW fallos {e.get('fallos', 0)}")
             if est.get('parada'):
                 partes.append('PARADA ACTIVA en el robot')
+            if bat and bat.get('ok') and int(bat.get('nivel', 0)) == 2:
+                partes.append('BATERÍA CRÍTICA: baja el robot')
+            elif bat and bat.get('ok') and int(bat.get('nivel', 0)) == 1:
+                partes.append('batería baja')
         if s['lin'] or s['ang']:
             partes.append(f"moviendo: lin {s['lin']:+d} giro {s['ang']:+d}")
         self.barra.config(text='   |   '.join(partes),

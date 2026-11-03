@@ -5,6 +5,7 @@ Simulación completa: Gazebo + robot + puente ROS-Gazebo + firmware simulado + R
   ros2 launch robot_trepador_gazebo simulacion.launch.py rviz:=false
   ros2 launch robot_trepador_gazebo simulacion.launch.py gazebo_gui:=false   # sin ventana de Gazebo
   ros2 launch robot_trepador_gazebo simulacion.launch.py empuje_max_n:=12.0
+  ros2 launch robot_trepador_gazebo simulacion.launch.py bat_carga_inicial:=0.15   # probar avisos
   ros2 launch robot_trepador_gazebo simulacion.launch.py reparto_delantera:=0.0   # ver abajo
 
 reparto_delantera: hoy los dos ESC van en paralelo (1.0 = mismo empuje en las dos hélices).
@@ -60,6 +61,9 @@ def generate_launch_description():
         DeclareLaunchArgument('reparto_delantera', default_value='1.0',
                               description='Fracción del empuje en la hélice delantera. 1.0 = ESC '
                                           'en paralelo (firmware actual); 0.0 = solo la trasera'),
+        DeclareLaunchArgument('bat_celdas', default_value='2', description='Celdas de la LiPo simulada'),
+        DeclareLaunchArgument('bat_mah', default_value='2200.0', description='Capacidad (mAh)'),
+        DeclareLaunchArgument('bat_carga_inicial', default_value='0.95', description='Carga al empezar (0..1)'),
         DeclareLaunchArgument('esc_max', default_value='1800',
                               description='Tope del botón + de la interfaz (us)'),
 
@@ -84,7 +88,10 @@ def generate_launch_description():
 
         Node(package='robot_trepador_gazebo', executable='firmware_simulado', output='screen',
              parameters=[{'empuje_max_n': LaunchConfiguration('empuje_max_n'),
-                          'reparto_delantera': LaunchConfiguration('reparto_delantera')}]),
+                          'reparto_delantera': LaunchConfiguration('reparto_delantera'),
+                          'bat_celdas': LaunchConfiguration('bat_celdas'),
+                          'bat_mah': LaunchConfiguration('bat_mah'),
+                          'bat_carga_inicial': LaunchConfiguration('bat_carga_inicial')}]),
 
         Node(package='rviz2', executable='rviz2', output='screen',
              arguments=['-d', os.path.join(desc, 'rviz', 'robot.rviz')],

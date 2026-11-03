@@ -17,12 +17,14 @@ de micro-ROS y todo aparece como tópicos de ROS 2.
 | `src/transporte_espnow.*` | Transporte personalizado de micro-ROS sobre ESP-NOW |
 | `src/actuadores.*` | ESC (pin 18, rampa y timeout) y DRV8833 (PWM 20 kHz, decaimiento lento) |
 | `src/imu.*` | MPU6050 por I2C, calibración del giro y filtro de Mahony |
+| `src/bateria.*` | Tensión de la batería (divisor en IO34), porcentaje por celda y avisos |
 | `src/main.cpp` | Nodo micro-ROS: tópicos, reconexión automática y seguridad |
 
 `firmware/puente_pc/` es la ESP32 del PC: copia bytes entre el USB y ESP-NOW, sin micro-ROS.
 
 Los pines coinciden con el esquemático ([hardware/README.md](../hardware/README.md)):
-ESC = IO18 · DRV8833 AIN1 = IO25, AIN2 = IO26, BIN1 = IO33, BIN2 = IO32 · MPU6050 SDA = IO21, SCL = IO22.
+ESC = IO18 · DRV8833 AIN1 = IO25, AIN2 = IO26, BIN1 = IO33, BIN2 = IO32 · MPU6050 SDA = IO21, SCL = IO22 ·
+batería = IO34.
 Si un lado de motores gira al revés, cambia `MOTOR_IZQ_INVERTIDO` o `MOTOR_DER_INVERTIDO` en `config.h`.
 
 ## Tópicos
@@ -34,7 +36,7 @@ Si un lado de motores gira al revés, cambia `MOTOR_IZQ_INVERTIDO` o `MOTOR_DER_
 | `/robot/ruedas` | `std_msgs/Float32MultiArray` | PC → robot | `[izq, der]` de −1 a 1, PWM directo |
 | `/robot/parada` | `std_msgs/Bool` | PC → robot | `true` = parada de emergencia enclavada; `false` la libera |
 | `/robot/imu` | `sensor_msgs/Imu` | robot → PC | Orientación, giro y aceleración a 50 Hz (`frame_id = imu_link`) |
-| `/robot/estado` | `std_msgs/String` (JSON) | robot → PC | Eco de todo lo recibido y aplicado, a 5 Hz |
+| `/robot/estado` | `std_msgs/String` (JSON) | robot → PC | Eco de todo lo recibido y aplicado, y la batería, a 5 Hz |
 
 Ejemplo de `/robot/estado`:
 
@@ -43,12 +45,16 @@ Ejemplo de `/robot/estado`:
  "esc":{"ord":1500,"obj":1500,"act":1340,"ms":120,"n":87},
  "ruedas":{"izq":0.50,"der":0.50,"pwm_izq":661,"pwm_der":661,"ms":40,"v":0.15,"w":0.00,"n_vel":310,"n_dir":0},
  "imu":{"ok":true,"roll":1.2,"pitch":-0.4,"yaw":12.8,"temp":31.5,"err":0},
- "enlace":{"rx":4120,"tx":9803,"fallos":3,"desc":0,"conex":1}}
+ "enlace":{"rx":4120,"tx":9803,"fallos":3,"desc":0,"conex":1},
+ "bat":{"ok":true,"v":7.82,"vc":3.91,"pct":72,"nivel":0,"celdas":2}}
 ```
 
 - `esc.ord` es la última orden recibida, `obj` el objetivo, `act` lo que se está mandando al ESC ahora
   (rampa), `ms` el tiempo desde la última orden y `n` las órdenes recibidas.
 - `ruedas.izq/der` es la orden normalizada y `pwm_*` el duty aplicado con signo (0–1023).
+- `bat`: `ok` es false si no hay divisor en el IO34; `v` es la tensión total (filtrada, ~1 s); `vc` la
+  tensión por celda; `pct` el porcentaje estimado; `nivel` vale 0 (bien), 1 (baja, < 3,5 V/celda) o
+  2 (crítica, < 3,3 V/celda).
 - `enlace` cuenta los paquetes ESP-NOW recibidos y enviados, los envíos fallidos, los bytes perdidos por
   buffer lleno y las conexiones al agente.
 
@@ -60,6 +66,16 @@ Ejemplo de `/robot/estado`:
 - **Agente o enlace perdido** (3 pings fallidos): todo se apaga y se reconecta solo.
 - **Al arrancar:** ESC a 1000 µs durante 3 s (armado) y ruedas frenadas.
 - La IMU se calibra al encender: **deja el robot quieto unos 2 s** después del armado.
+
+## Batería
+
+Se configura al final de `config.h`: `BAT_CELDAS`, las resistencias del divisor, `BAT_CALIBRACION` y los
+umbrales de aviso. El porcentaje sale de la tensión de cada celda, así que **baja cuando las hélices
+piden mucha corriente** y se recupera al soltarlas. Para saber la carga real, míralo con las hélices
+apagadas.
+
+El robot **solo avisa: no apaga nada** por batería baja, porque cortar las hélices en la pared o en el
+techo lo haría caer. Cuando aparezca el aviso crítico, baja el robot al suelo cuanto antes.
 
 ## Compilar y subir
 
@@ -102,4 +118,5 @@ Cada paquete ESP-NOW es `[cabecera][hasta 249 bytes]`:
 
 - **Un pin por ESC**, para poder repartir el empuje ([fisica_transiciones.md](fisica_transiciones.md)).
 - Sin encoders, `cmd_vel` es lazo abierto.
-- Sin medición de batería (no hay divisor de tensión en la placa).
+- Sin medición de corriente: no se sabe cuánta potencia consume cada brushless (solo el acelerador
+  que se le manda al ESC).

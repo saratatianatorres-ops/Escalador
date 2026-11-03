@@ -60,3 +60,17 @@ static const uint8_t MAC_PUENTE[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 // ---------------- micro-ROS ----------------
 #define NOMBRE_NODO      "robot_trepador"
 #define ESPACIO_NOMBRES  "robot"   // tópicos quedan como /robot/...
+
+// ---------------- Batería ----------------
+// Divisor de tensión:  + batería -> R1 -> PIN_BATERIA -> R2 -> GND  (+ 100 nF del pin a GND)
+// La tensión en el pin no debe pasar de ~3,1 V con la batería llena.
+//   2S (8,4 V):  R1 = 100k, R2 = 33k  -> 2,08 V
+//   3S (12,6 V): R1 = 100k, R2 = 22k  -> 2,27 V
+#define PIN_BATERIA          34        // ADC1, solo entrada (el ADC2 no funciona con ESP-NOW)
+#define BAT_R1_OHM           100000.0f
+#define BAT_R2_OHM           33000.0f
+#define BAT_CELDAS           2         // LiPo 2S (7,4 V nominal): la placa recibe +7,5 V
+#define BAT_CALIBRACION      1.00f     // multímetro / valor que muestra la interfaz
+#define BAT_V_CELDA_BAJA     3.50f     // aviso amarillo
+#define BAT_V_CELDA_CRITICA  3.30f     // aviso rojo: bajar el robot cuanto antes
+#define BAT_FREQ_HZ          10
