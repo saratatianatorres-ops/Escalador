@@ -1,103 +1,105 @@
 <?xml version="1.0"?>
 <!--
-  Robot trepador "Escalador"
+  Robot trepador "Escalador": modelo sacado del ensamble de SolidWorks
+  hardware/cad/Diseno_2.SLDASM (herramientas/cad/solidworks/ explica cómo).
 
-  Chasis: dos bases impresas iguales y fijas entre sí, una espejo de la otra
-  (hardware/cad/Base_2_v2.STL, generada con herramientas/cad/base_v2.py). Van una
-  delante de la otra, unidas por el lado de la repisa, de modo que cada ducto queda en
-  un extremo. La v2 tiene la nariz con el soporte del N20 integrado: las llantas
-  sobresalen 20 mm del chasis para tocar la pared primero.
+  Dos bases "Base 2" iguales y fijas (la de atrás girada 180°), unidas por el lado de las
+  repisas. Cada base lleva un A2217 sobre su "Agarre_motor" en el centro del ducto. Las cuatro
+  llantas JSumo SLT20 van POR FUERA de la placa, en las esquinas, con un N20 cada una apoyado
+  sobre el borde de la placa. La placa queda a 1,5 mm del suelo (efecto suelo).
 
-        atrás                         adelante
-     ┌────────────┬──┬──┬────────────┐
-     │  ducto     │re│re│   ducto    │   450 × 216 mm
-     │ (Base_1)   │pi│pi│ (Base_2)   │
-     └────────────┴sa┴sa┴────────────┘
-    o                                  o  <- llantas 20 mm por fuera del chasis
-                    x = 0
+        atrás                                   adelante
+     o ┌──────────────┬──┬──┬──────────────┐ o
+       │   ducto      │re│re│   ducto      │      468 × 260 × 71,5 mm (con llantas)
+       │  (Base 2-2)  │pi│pi│  (Base 2-1)  │
+     o └──────────────┴sa┴sa┴──────────────┘ o
+                         x = 0
 
-  Cada base lleva un A2217 en su ducto (succión) y 2 llantas JSumo SLT20
-  (Ø33 × 21 mm) con un N20 cada una. Tracción diferencial: los dos N20 de cada lado
-  van en paralelo en la misma salida del DRV8833.
-
-  Ejes del robot: x adelante, y izquierda, z arriba (lado de los ductos).
-  Origen de base_link: centro del robot, a la altura de la cara inferior de la placa.
-
-  sim:=true añade los plugins de Gazebo Harmonic.
+  Ejes: x adelante, y izquierda, z arriba. Origen de base_link: centro del robot, a la altura
+  de la cara inferior de la placa. sim:=true añade los plugins de Gazebo Harmonic.
 -->
 <robot name="escalador" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:arg name="sim" default="false"/>
+  <!-- posición de los ejes de las llantas desde el centro (m). Ensamble: 0,2175 -->
+  <xacro:arg name="rueda_x" default="0.2175"/>
 
-  <!-- ================= Medidas (cámbialas aquí) ================= -->
-  <!-- Bases (de Base_2.STL) -->
+  <!-- ================= Medidas del ensamble (m) ================= -->
   <xacro:property name="largo_base"    value="0.225"/>   <!-- cada base, en x -->
   <xacro:property name="ancho"         value="0.216"/>
   <xacro:property name="esp_placa"     value="0.010"/>
   <xacro:property name="ancho_repisa"  value="0.026"/>
   <xacro:property name="alto_repisa"   value="0.057"/>
-  <xacro:property name="ducto_x"       value="0.127"/>   <!-- centro del ducto desde la unión -->
-  <xacro:property name="ducto_r"       value="0.0975"/>  <!-- radio exterior del anillo -->
+  <xacro:property name="ducto_x"       value="0.127"/>   <!-- centro del ducto y del A2217 -->
+  <xacro:property name="ducto_r"       value="0.0975"/>
   <xacro:property name="ducto_alto"    value="0.070"/>
 
   <!-- Llantas JSumo SLT20 (Ø33 × 21 mm, banda de 18 mm) -->
   <xacro:property name="r_rueda"       value="0.0165"/>
   <xacro:property name="ancho_rueda"   value="0.021"/>
   <xacro:property name="ancho_banda"   value="0.018"/>
-  <xacro:property name="r_rin"         value="0.0135"/>
-  <!-- Posición de las llantas (Base v2): en las esquinas exteriores.
-       saliente_rueda = cuánto sobresale el frente de la llanta por delante del chasis
-                        (MuJoCo: desde 10 mm pasa del suelo a la pared; se usan 20 mm)
-       eje_bajo_placa = distancia del eje a la cara inferior de la placa (soporte del N20) -->
-  <xacro:property name="saliente_rueda" value="0.020"/>
-  <xacro:property name="eje_bajo_placa" value="0.005"/>
-  <xacro:property name="rueda_x"       value="${largo_base + saliente_rueda - r_rueda}"/>  <!-- 0,2285 -->
-  <xacro:property name="soporte_y"     value="${ancho/2 - ancho_rueda - 0.001 - 0.0045}"/>   <!-- centro del soporte del N20 -->
-  <xacro:property name="via"           value="${ancho - ancho_rueda}"/>  <!-- 0,195 m entre centros -->
+  <xacro:property name="rueda_x"       value="$(arg rueda_x)"/>  <!-- ensamble: 0,2175 (9 mm por delante del chasis) -->
+  <xacro:property name="rueda_y"       value="0.1195"/>  <!-- vía 239 mm, por fuera de la placa -->
+  <xacro:property name="rueda_z"       value="0.0150"/>  <!-- eje 15 mm POR ENCIMA de la cara inferior -->
+  <xacro:property name="via"           value="${2*rueda_y}"/>
   <xacro:property name="par_rueda"     value="0.2"/>     <!-- N·m máximo por N20 -->
-  <xacro:property name="vel_rueda"     value="30"/>      <!-- rad/s máximo -->
-  <xacro:property name="mu_rueda"      value="1.0"/>     <!-- silicona sobre superficie lisa -->
+  <xacro:property name="vel_rueda"     value="30"/>
+  <xacro:property name="mu_rueda"      value="1.0"/>
 
-  <!-- Hélices dentro de los ductos -->
+  <!-- N20 (caja de 12 × 13,2 × 35,9 mm) sobre el borde de la placa, junto a cada llanta -->
+  <xacro:property name="n20_y"         value="0.101"/>
+  <xacro:property name="n20_z"         value="0.0146"/>
+
+  <!-- Hélices dentro de los ductos, encima del A2217 -->
   <xacro:property name="d_helice"      value="0.178"/>   <!-- 7 pulgadas: ajusta a la tuya -->
-  <xacro:property name="altura_helice" value="0.045"/>   <!-- desde la cara inferior de la placa -->
+  <xacro:property name="altura_helice" value="0.062"/>
 
   <!-- Masas (kg), hardware/lista_materiales.md. Total = 1,225 kg:
        bases 2 × 220 g + todo lo demás 785 g (peor caso que da el equipo) -->
-  <xacro:property name="masa_bases"    value="0.441"/>   <!-- 2 × 220 g + nariz v2 -->
-  <!-- 785 g − motores 153 − hélices 19 − N20 52 − llantas 48 = 513 g: batería, porta pilas, BMS,
-       2 ESC, PCB, ESP32, buck, regletas, IMU, puente H, tornillería y cables, en el centro -->
+  <xacro:property name="masa_bases"    value="0.440"/>
+  <!-- 785 g − motores 153 − hélices 19 − N20 52 − llantas 48 = 513 g: batería, porta pilas,
+       BMS, 2 ESC, PCB, ESP32, buck, regletas, IMU, puente H, tornillería y cables -->
   <xacro:property name="masa_electronica" value="0.513"/>
   <xacro:property name="z_electronica" value="0.030"/>
   <xacro:property name="masa_motor"    value="0.0765"/>  <!-- cada A2217 (153 g el par) -->
-  <xacro:property name="masa_helice"   value="0.0095"/>  <!-- hélice + adaptador (19 g el par) -->
-  <xacro:property name="masa_n20"      value="0.013"/>   <!-- N20 10 g + tornillos/pegante del soporte -->
-  <xacro:property name="masa_rueda"    value="0.012"/>   <!-- goma SLT20 + rin (estimado: pésalo) -->
+  <xacro:property name="masa_helice"   value="0.0095"/>
+  <xacro:property name="masa_n20"      value="0.013"/>
+  <xacro:property name="masa_rueda"    value="0.012"/>
   <xacro:property name="masa_chasis"   value="${masa_bases + masa_electronica}"/>
   <xacro:property name="z_cm_chasis"   value="${(masa_bases*0.0172 + masa_electronica*z_electronica)/masa_chasis}"/>
+
+  <xacro:property name="mallas" value="package://robot_trepador_description/meshes"/>
 
   <!-- ================= Materiales ================= -->
   <material name="base">    <color rgba="0.23 0.44 0.71 1"/></material>
   <material name="base2">   <color rgba="0.30 0.52 0.80 1"/></material>
   <material name="naranja"> <color rgba="0.95 0.45 0.10 1"/></material>
   <material name="gris">    <color rgba="0.60 0.62 0.65 1"/></material>
-  <material name="negro">   <color rgba="0.12 0.12 0.14 1"/></material>
+  <material name="negro">   <color rgba="0.15 0.15 0.17 1"/></material>
   <material name="helice">  <color rgba="0.85 0.85 0.90 0.55"/></material>
 
-  <!-- ================= Chasis (las dos bases) ================= -->
+  <!-- ================= Chasis: las dos bases y los soportes de los A2217 ================= -->
   <link name="base_link">
     <visual>
-      <geometry><mesh filename="package://robot_trepador_description/meshes/base_delantera.stl"/></geometry>
+      <geometry><mesh filename="${mallas}/base_delantera.stl"/></geometry>
       <material name="base"/>
     </visual>
     <visual>
-      <geometry><mesh filename="package://robot_trepador_description/meshes/base_trasera.stl"/></geometry>
+      <geometry><mesh filename="${mallas}/base_trasera.stl"/></geometry>
       <material name="base2"/>
+    </visual>
+    <visual>
+      <geometry><mesh filename="${mallas}/soporte_motor_delantero.stl"/></geometry>
+      <material name="gris"/>
+    </visual>
+    <visual>
+      <geometry><mesh filename="${mallas}/soporte_motor_trasero.stl"/></geometry>
+      <material name="gris"/>
     </visual>
     <!-- franja naranja = delante (igual que en la vista 3D de la interfaz) -->
     <visual>
       <origin xyz="${largo_base - 0.004} 0 ${esp_placa + 0.002}"/>
-      <geometry><box size="0.008 ${ancho} 0.004"/></geometry>
+      <geometry><box size="0.008 ${ancho - 0.02} 0.004"/></geometry>
       <material name="naranja"/>
     </visual>
 
@@ -118,20 +120,7 @@
       <origin xyz="0 0 ${(esp_placa + alto_repisa)/2}"/>
       <geometry><box size="${2*ancho_repisa} ${ancho} ${alto_repisa - esp_placa}"/></geometry>
     </collision>
-    <!-- soportes de los N20 en las cuatro esquinas (nariz v2) -->
-    <xacro:macro name="col_soporte" params="sx sy">
-      <collision>
-        <origin xyz="${sx*rueda_x} ${sy*soporte_y} -0.0013"/>
-        <geometry><box size="0.0171 0.009 0.0226"/></geometry>
-      </collision>
-    </xacro:macro>
-    <xacro:col_soporte sx="1"  sy="1"/>
-    <xacro:col_soporte sx="1"  sy="-1"/>
-    <xacro:col_soporte sx="-1" sy="1"/>
-    <xacro:col_soporte sx="-1" sy="-1"/>
 
-    <!-- Bases: inercia calculada de la malla (por kg). Electrónica y batería: bloque de
-         15 × 10 × 4 cm en el centro. -->
     <inertial>
       <origin xyz="0 0 ${z_cm_chasis}"/>
       <mass value="${masa_chasis}"/>
@@ -141,23 +130,12 @@
     </inertial>
   </link>
 
-  <!-- ================= Llantas ================= -->
-  <xacro:macro name="rueda" params="nombre x y">
+  <!-- ================= Llantas y N20 ================= -->
+  <xacro:macro name="rueda" params="nombre sx sy lado">
     <link name="rueda_${nombre}">
-      <visual>   <!-- goma -->
-        <origin rpy="${pi/2} 0 0"/>
-        <geometry><cylinder radius="${r_rueda}" length="${ancho_banda}"/></geometry>
+      <visual>
+        <geometry><mesh filename="${mallas}/llanta_${lado}.stl"/></geometry>
         <material name="naranja"/>
-      </visual>
-      <visual>   <!-- rin -->
-        <origin rpy="${pi/2} 0 0"/>
-        <geometry><cylinder radius="${r_rin}" length="${ancho_rueda}"/></geometry>
-        <material name="gris"/>
-      </visual>
-      <visual>   <!-- marca para ver girar la llanta -->
-        <origin xyz="${r_rin*0.55} 0 0" rpy="${pi/2} 0 0"/>
-        <geometry><box size="${r_rin*0.7} 0.004 ${ancho_rueda + 0.002}"/></geometry>
-        <material name="negro"/>
       </visual>
       <collision>
         <origin rpy="${pi/2} 0 0"/>
@@ -173,7 +151,7 @@
     <joint name="rueda_${nombre}_joint" type="continuous">
       <parent link="base_link"/>
       <child link="rueda_${nombre}"/>
-      <origin xyz="${x} ${y} ${-eje_bajo_placa}"/>
+      <origin xyz="${sx*rueda_x} ${sy*rueda_y} ${rueda_z}"/>
       <axis xyz="0 1 0"/>
       <limit effort="${par_rueda}" velocity="${vel_rueda}"/>
     </joint>
@@ -182,50 +160,46 @@
       <mu2>${mu_rueda}</mu2>
     </gazebo>
 
-    <!-- N20 pegado en su soporte (fijo al chasis). La caja reductora va dentro de la llanta -->
+    <!-- N20 fijo sobre el borde de la placa; su eje entra en la llanta -->
     <link name="n20_${nombre}">
       <visual>
-        <geometry><box size="0.012 0.025 0.010"/></geometry>
+        <geometry><box size="0.012 0.0359 0.0132"/></geometry>
         <material name="gris"/>
       </visual>
       <inertial>
         <mass value="${masa_n20}"/>
-        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="3e-7" iyz="0" izz="1e-6"/>
+        <inertia ixx="1.6e-6" ixy="0" ixz="0" iyy="3.5e-7" iyz="0" izz="1.6e-6"/>
       </inertial>
     </link>
     <joint name="n20_${nombre}_joint" type="fixed">
       <parent link="base_link"/>
       <child link="n20_${nombre}"/>
-      <origin xyz="${x} ${y*(1 - 0.0085/(via/2))} ${-eje_bajo_placa}"/>  <!-- 8,5 mm hacia adentro de la llanta -->
+      <origin xyz="${sx*rueda_x} ${sy*n20_y} ${n20_z}"/>
     </joint>
   </xacro:macro>
 
-  <!-- Base delantera (Base_2) y base trasera (Base_1): 2 llantas cada una -->
-  <xacro:rueda nombre="del_izq" x="${rueda_x}"  y="${via/2}"/>
-  <xacro:rueda nombre="del_der" x="${rueda_x}"  y="${-via/2}"/>
-  <xacro:rueda nombre="tra_izq" x="${-rueda_x}" y="${via/2}"/>
-  <xacro:rueda nombre="tra_der" x="${-rueda_x}" y="${-via/2}"/>
+  <xacro:rueda nombre="del_izq" sx="1"  sy="1"  lado="izq"/>
+  <xacro:rueda nombre="del_der" sx="1"  sy="-1" lado="der"/>
+  <xacro:rueda nombre="tra_izq" sx="-1" sy="1"  lado="izq"/>
+  <xacro:rueda nombre="tra_der" sx="-1" sy="-1" lado="der"/>
 
-  <!-- ================= Motores A2217 y hélices (una por ducto) ================= -->
-  <!-- El eje de la articulación apunta a −z: el empuje positivo aprieta el robot
-       contra la superficie (el ventilador saca el aire hacia arriba). -->
-  <xacro:macro name="helice" params="nombre x">
+  <!-- ================= A2217 y hélices (una por ducto) ================= -->
+  <!-- El eje de la hélice apunta a −z: el empuje positivo aprieta el robot contra la superficie -->
+  <xacro:macro name="helice" params="nombre sx">
     <link name="motor_${nombre}">
       <visual>
-        <origin xyz="0 0 ${(altura_helice - esp_placa)/2}"/>
-        <geometry><cylinder radius="0.014" length="${altura_helice - esp_placa}"/></geometry>
+        <geometry><mesh filename="${mallas}/a2217_${nombre}.stl"/></geometry>
         <material name="negro"/>
       </visual>
       <inertial>
-        <origin xyz="0 0 ${(altura_helice - esp_placa)/2}"/>
+        <origin xyz="${sx*ducto_x} 0 0.035"/>
         <mass value="${masa_motor}"/>
-        <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="7e-6"/>
+        <inertia ixx="1.5e-5" ixy="0" ixz="0" iyy="1.5e-5" iyz="0" izz="7e-6"/>
       </inertial>
     </link>
     <joint name="motor_${nombre}_joint" type="fixed">
       <parent link="base_link"/>
       <child link="motor_${nombre}"/>
-      <origin xyz="${x} 0 ${esp_placa}"/>
     </joint>
 
     <link name="helice_${nombre}">
@@ -247,13 +221,13 @@
     <joint name="helice_${nombre}_joint" type="continuous">
       <parent link="base_link"/>
       <child link="helice_${nombre}"/>
-      <origin xyz="${x} 0 ${altura_helice}"/>
+      <origin xyz="${sx*ducto_x} 0 ${altura_helice}"/>
       <axis xyz="0 0 -1"/>
     </joint>
   </xacro:macro>
 
-  <xacro:helice nombre="delantera" x="${ducto_x}"/>
-  <xacro:helice nombre="trasera"   x="${-ducto_x}"/>
+  <xacro:helice nombre="delantero" sx="1"/>
+  <xacro:helice nombre="trasero"   sx="-1"/>
 
   <!-- ================= IMU (MPU6050), en la zona de las repisas ================= -->
   <link name="imu_link"/>
@@ -308,8 +282,8 @@
           <max_thrust_cmd>40</max_thrust_cmd>
         </plugin>
       </xacro:macro>
-      <xacro:empuje nombre="delantera" topico="empuje_delantero"/>
-      <xacro:empuje nombre="trasera"   topico="empuje_trasero"/>
+      <xacro:empuje nombre="delantero" topico="empuje_delantero"/>
+      <xacro:empuje nombre="trasero"   topico="empuje_trasero"/>
 
       <!-- Posición real en 3D (también en la pared y el techo) para RViz -->
       <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">

@@ -31,7 +31,7 @@ from tf2_ros import TransformBroadcaster
 
 RUEDAS_IZQ = ('rueda_del_izq_joint', 'rueda_tra_izq_joint')
 RUEDAS_DER = ('rueda_del_der_joint', 'rueda_tra_der_joint')
-HELICES = ('helice_delantera_joint', 'helice_trasera_joint')
+HELICES = ('helice_delantero_joint', 'helice_trasero_joint')
 
 
 def rotar(q, v):
@@ -52,7 +52,7 @@ class OdometriaImu(Node):
         super().__init__('odometria_imu')
         self.declare_parameter('v_max', 0.30)        # V_MAX_MS del firmware
         self.declare_parameter('pwm_max', 1023)      # MOTOR_PWM_MAX
-        self.declare_parameter('ancho_via', 0.195)   # ANCHO_VIA_M
+        self.declare_parameter('ancho_via', 0.239)   # ANCHO_VIA_M
         self.declare_parameter('radio_rueda', 0.0165)  # JSumo SLT20, Ø33 mm
         self.declare_parameter('frecuencia', 50.0)
 

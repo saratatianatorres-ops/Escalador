@@ -85,7 +85,7 @@ class FirmwareSimulado(Node):
     def __init__(self):
         super().__init__('robot_trepador')
         self.declare_parameter('v_max', 0.30)           # V_MAX_MS
-        self.declare_parameter('ancho_via', 0.195)      # ANCHO_VIA_M
+        self.declare_parameter('ancho_via', 0.239)      # ANCHO_VIA_M
         self.declare_parameter('empuje_max_n', 8.9)     # N por ducto a 1700 us: 909 gf medidos a 23 A
         self.declare_parameter('empuje_v_ref', 11.5)    # voltaje al que se midió (11,7 → 11,3 V)
         self.declare_parameter('reparto_delantera', 1.0)  # fracción fija del empuje en la hélice delantera

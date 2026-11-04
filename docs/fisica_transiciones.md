@@ -3,7 +3,18 @@
 El robot tiene que pasar de un plano a otro **por sí mismo**, sin cuerdas. Este documento resume qué hace
 falta para lograrlo, cómo se comprobó en simulación y qué reglas de diseño salen de ahí.
 
-## Resumen para tu robot (nariz v2)
+## Diseño 2 (ensamble de SolidWorks)
+
+El robot actual (`hardware/cad/Diseno_2.SLDASM`) lleva las llantas por fuera de la placa, 9 mm por delante, y la
+placa a 1,5 mm del suelo. En Gazebo, con ese ensamble tal cual, **la cola de la placa toca el suelo a unos 18°**
+cuando la nariz sube por la pared y el robot se queda trabado. Con los ejes 7,5 mm más afuera (centro de la
+llanta en el extremo de la placa) **pasa del suelo a la pared y sube hasta el techo**. La regla general:
+
+> **Ninguna parte del chasis que esté por debajo del eje de las llantas puede quedar por fuera del centro de
+> la llanta** (ni adelante ni atrás). Si no, al girar el robot hacia la pared, esa parte toca el suelo o la pared
+> antes que la llanta.
+
+## Resumen del estudio de la nariz (propuesta v2)
 
 Estudio hecho con **tu robot real** en MuJoCo (`herramientas/fisica_mujoco/nariz.py`): dos bases de 450 mm
 en total, llantas JSumo SLT20 de Ø33 mm, ductos a ±127 mm, **1,225 kg** (bases 2 × 220 g + 785 g del resto, peor

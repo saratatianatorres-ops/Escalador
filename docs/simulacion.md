@@ -34,66 +34,40 @@ paralelo, así que el robot real siempre usa 1.0).
 
 ### El modelo
 
-![Modelo del robot en RViz](img/modelo_rviz.png)
+El URDF sale del ensamble de SolidWorks `hardware/cad/Diseno_2.SLDASM`: las mallas de la base, el soporte del
+motor, el A2217 y la llanta se extrajeron de ese archivo y cada pieza está donde la pusiste en el ensamble
+(cómo se hizo: `herramientas/cad/solidworks/README.md`).
 
-El chasis son tus dos bases impresas, versión v2 con la nariz (`hardware/cad/Base_2_v2.STL` y su espejo), una delante de la otra y
-unidas por las repisas: 450 × 216 × 70 mm. Cada base tiene su ducto con un A2217 y 2 llantas JSumo SLT20
-(Ø33 × 21 mm) que sobresalen 20 mm por delante y por detrás. Todo se ajusta arriba de `robot_trepador.urdf.xacro`:
+![Ensamble de SolidWorks y reconstrucción](img/ensamble_solidworks.png)
 
-| Medida | Valor | Propiedad |
+| Medida | Valor | Propiedad o argumento |
 |---|---|---|
-| Llantas | Ø33 × 21 mm (banda 18 mm), fricción 1,0 | `r_rueda`, `ancho_rueda`, `mu_rueda` |
-| Distancia entre ejes | 457 mm (llantas 20 mm por fuera del chasis) | `saliente_rueda` |
-| Vía (centro a centro) | 195 mm | sale de `ancho` − `ancho_rueda` |
-| Eje bajo la placa | 5 mm, así la placa queda a 21,5 mm del suelo | `eje_bajo_placa` |
-| Ductos | centros a ±127 mm, Ø195 mm | `ducto_x`, `ducto_r` |
-| Hélices | 7" (178 mm) a 45 mm de la placa | `d_helice`, `altura_helice` |
-| Masa | 1,225 kg: bases 2 × 220 g + 785 g del resto (`hardware/lista_materiales.md`) | `masa_bases`, `masa_electronica`, ... |
-| Par de cada N20 | 0,2 N·m | `par_rueda` |
-| Empuje | 8,9 N por ducto a 1700 µs (909 gf medidos), cae con el cuadrado del voltaje | argumento `empuje_max_n` (y el parámetro `empuje_v_ref` del nodo, 11,5 V) |
+| Robot completo | 468 × 260 × 71,5 mm | |
+| Llantas SLT20 | Ø33 × 21 mm, por fuera de la placa, vía 239 mm | `rueda_y` |
+| Ejes | ±217,5 mm del centro (ensamble) | argumento `rueda_x` |
+| Altura | eje 15 mm por encima de la cara inferior; placa a 1,5 mm del suelo | `rueda_z` |
+| Ductos y A2217 | centros a ±127 mm | `ducto_x` |
+| Masa | 1,225 kg (`hardware/lista_materiales.md`) | `masa_bases`, `masa_electronica`, ... |
+| Empuje | 8,9 N por ducto a 1700 µs, cae con el cuadrado del voltaje | `empuje_max_n` |
 | Batería | 3S 2200 mAh, 23 A por motor a 1700 µs | `bat_celdas`, `bat_mah` |
 
-Para Gazebo, los choques usan formas simples (la placa como caja y los ductos como cilindros), que son
-más rápidas y estables que la malla; lo que ves es la malla real.
-
-Los soportes de los N20 están en la Base v2. Si cambias la saliente en `herramientas/cad/base_v2.py`,
-cambia también `saliente_rueda` en el URDF.
-
-**Probar en la pared:** pon las hélices al máximo con el robot en el suelo y luego colócalo en la pared:
-
-```bash
-gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msgs.Boolean \
-  --timeout 3000 --req 'name: "escalador", position: {x: 0.778, z: 0.4}, orientation: {w: 0.7071, y: -0.7071}'
-```
-
-Se sostiene con las hélices y sube con ▲ hasta la esquina del techo.
-
-**Probar en el techo** (boca abajo, con las hélices ya en 1700 µs):
-
-```bash
-gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msgs.Boolean \
-  --timeout 3000 --req 'name: "escalador", position: {x: 0.0, z: 0.978}, orientation: {w: 0.0, x: 1.0}'
-```
-
-Se queda pegado al techo y avanza con ▲ hasta la pared. Si bajas las hélices, se cae.
-
-**Volver al suelo:**
-
-```bash
-gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msgs.Boolean \
-  --timeout 3000 --req 'name: "escalador", position: {x: 0.0, z: 0.03}, orientation: {w: 1.0}'
-```
+**`rueda_x` en la simulación.** Por defecto la simulación usa `rueda_x:=0.225`: los ejes 7,5 mm más afuera
+que en el ensamble, con el centro de cada llanta justo en el extremo de la placa. Con el valor del ensamble
+(`rueda_x:=0.2175`) el robot **no sube a la pared**: la placa va a 1,5 mm del suelo y, al levantar la nariz,
+la cola toca el suelo a unos 18° y las llantas traseras se despegan. RViz con el robot real usa el valor del
+ensamble.
 
 ### Qué reproduce Gazebo y qué no
 
 ![Gazebo: del suelo a la pared](img/gazebo_suelo_pared.png)
 
-Probado con las bases v2, 1,225 kg y 8,9 N por ducto, motor de física **Bullet** y `reparto:=auto`:
+Probado con el ensamble Diseño 2, `rueda_x:=0.225`, 1,225 kg, 8,9 N por ducto, motor de física **Bullet** y `reparto:=auto`:
 
 | Prueba | Resultado en Gazebo |
 |---|---|
 | Andar por el suelo, hélices con rampa y tope de 1700 µs, parada | ✔ |
-| **Pasar del suelo a la pared andando** | ✔ (unos 8 s desde que la nariz toca la pared) |
+| **Pasar del suelo a la pared andando** | ✔ (unos 4 s desde que la nariz toca la pared) |
+| Lo mismo con los ejes del ensamble (`rueda_x:=0.2175`) | ✘ la cola toca el suelo a ~18° |
 | Subir por la pared hasta la esquina del techo | ✔ |
 | Quedarse pegado al techo y avanzar | ✔ |
 | Pasar de la pared al techo | ✘ No alcanza el empuje (ver abajo) |
@@ -114,7 +88,7 @@ empuje. Si se baja la hélice delantera para que la nariz se despegue hacia el t
 (probado: con la delantera apagada se cae, con la mitad resbala hasta el suelo). Hace falta más empuje
 o menos peso: con empuje/peso de 1,48 no hay margen.
 
-**Girar.** Las llantas están a 457 mm entre ejes y a 195 mm entre lados. Para girar, un robot de 4 ruedas
+**Girar.** Las llantas están a 435–450 mm entre ejes y a 239 mm entre lados. Para girar, un robot de 4 ruedas
 fijas tiene que arrastrarlas de lado, y con un robot tan largo y angosto casi no lo logra: en MuJoCo gira
 unos 8° por segundo (el 14 % de lo que pide la interfaz), con o sin hélices; en Gazebo todavía menos.
 El robot real va a girar mal. Opciones: girar mientras avanza, acercar las llantas al centro (menos

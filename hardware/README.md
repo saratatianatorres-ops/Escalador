@@ -5,18 +5,22 @@
 | `esquematico.jpg` | Esquemático de la placa del robot (KiCad) |
 | `pcb_cobre.jpg` | Máscara de la capa de cobre para transferencia (está **en espejo**: así se imprime) |
 | `lista_materiales.md` | Componentes, cantidades y peso |
-| `cad/Base_2_v2.STL` | **Base para imprimir** (mm): nariz con el soporte del N20 integrado y la llanta 20 mm adelante |
-| `cad/Base_1_v2.STL` | Su espejo (la otra base) |
-| `cad/Base_2.STL` | Base original, sin la nariz |
+| `cad/Diseno_2.SLDASM` | **Ensamble actual** (SolidWorks): de aquí sale el URDF (ver `herramientas/cad/solidworks/`) |
+| `cad/Base_2.STL` | Base 2 sola (mm) |
+| `cad/Base_2_v2.STL`, `cad/Base_1_v2.STL` | Propuesta anterior de nariz (llanta debajo de la placa, 20 mm adelante); quedó reemplazada por el ensamble |
 
-La v2 se genera con `herramientas/cad/base_v2.py` a partir de la original: si cambias la saliente de la
-llanta o las medidas del N20, edita los parámetros de arriba del script y vuelve a correrlo.
+![Ensamble de SolidWorks y reconstrucción](../docs/img/ensamble_solidworks.png)
 
-![Nariz original y v2](../docs/img/nariz_v2.png)
+**Cómo es el ensamble (Diseño 2):** dos Base 2 (la de atrás girada 180°) unidas por las repisas; un A2217 sobre
+su `Agarre_motor` en el centro de cada ducto; cuatro llantas SLT20 **por fuera de la placa**, en las esquinas,
+con el eje 15 mm por encima de la cara inferior de la placa y un N20 apoyado sobre el borde. La placa queda a
+**1,5 mm del suelo** (efecto suelo). Robot completo: 468 × 260 × 71,5 mm, vía 239 mm, 435 mm entre ejes.
 
-**Montaje del N20 en la v2:** la caja reductora entra en la cavidad de la llanta (Ø18 × 14,5 mm) y el
-cuerpo del motor pasa por el túnel de 12,3 × 10,3 mm del soporte, desde adentro hacia afuera. Fíjalo con
-una gota de pegamento o con un tornillo, y deja 1 mm entre la llanta y el soporte para que no roce.
+**Ojo con la cola de la placa.** Los ejes están 7,5 mm por dentro de los extremos de la placa. Como la placa va
+casi pegada al suelo, al levantar la nariz contra una pared la cola toca el suelo a unos 18° y el robot pivota
+sobre ella: las llantas traseras se despegan y no sube (probado en Gazebo). Con los ejes **7,5 mm más afuera**
+(centro de cada llanta justo en el extremo de la placa) sí sube. Otra opción es redondear o biselar los
+extremos de la placa por debajo.
 
 > Sube aquí también los archivos de KiCad (`.kicad_pro`, `.kicad_sch`, `.kicad_pcb`) para poder editarlos.
 

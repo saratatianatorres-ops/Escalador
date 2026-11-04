@@ -18,12 +18,15 @@ def generate_launch_description():
     xacro = os.path.join(get_package_share_directory('robot_trepador_description'),
                          'urdf', 'robot_trepador.urdf.xacro')
     descripcion = ParameterValue(
-        Command(['xacro ', xacro, ' sim:=', LaunchConfiguration('sim')]), value_type=str)
+        Command(['xacro ', xacro, ' sim:=', LaunchConfiguration('sim'),
+                 ' rueda_x:=', LaunchConfiguration('rueda_x')]), value_type=str)
 
     return LaunchDescription([
         DeclareLaunchArgument('sim', default_value='false',
                               description='true = incluye los plugins de Gazebo'),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('rueda_x', default_value='0.2175',
+                              description='Eje de las llantas desde el centro (m)'),
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              output='screen',
              parameters=[{'robot_description': descripcion,

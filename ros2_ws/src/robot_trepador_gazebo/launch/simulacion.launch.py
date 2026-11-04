@@ -58,9 +58,13 @@ def generate_launch_description():
                               description='false = Gazebo sin ventana (solo servidor)'),
         DeclareLaunchArgument('rviz', default_value='true'),
         DeclareLaunchArgument('interfaz', default_value='true'),
+        # 0.2175 = ensamble Diseño 2: la cola de la placa toca el suelo a ~18° y no sube.
+        # 0.225 = ejes 7,5 mm más afuera (centro de la llanta en el extremo de la placa): sube.
+        DeclareLaunchArgument('rueda_x', default_value='0.225',
+                              description='Eje de las llantas desde el centro (m). Ensamble: 0.2175'),
         DeclareLaunchArgument('x', default_value='0.0'),
         DeclareLaunchArgument('y', default_value='0.0'),
-        DeclareLaunchArgument('z', default_value='0.02'),
+        DeclareLaunchArgument('z', default_value='0.006'),
         DeclareLaunchArgument('yaw', default_value='0.0'),
         DeclareLaunchArgument('empuje_max_n', default_value='8.9',
                               description='Empuje de cada hélice a 1700 us, el máximo permitido (N)'),
@@ -85,7 +89,8 @@ def generate_launch_description():
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(desc, 'launch', 'descripcion.launch.py')),
-            launch_arguments={'sim': 'true', 'use_sim_time': 'true'}.items()),
+            launch_arguments={'sim': 'true', 'use_sim_time': 'true',
+                              'rueda_x': LaunchConfiguration('rueda_x')}.items()),
 
         Node(package='ros_gz_sim', executable='create', output='screen',
              arguments=['-topic', 'robot_description', '-name', 'escalador',

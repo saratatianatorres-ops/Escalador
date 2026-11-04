@@ -10,8 +10,8 @@ de ROS 2 en el PC. Incluye modelo 3D para **RViz** y simulación en **Gazebo** c
 
 ![Modelo del robot](docs/img/modelo_rviz.png)
 
-**Hardware:** dos bases impresas fijas (una espejo de la otra, versión v2 con nariz), cada una con un ducto y un brushless A2217 ·
-2 ESC 30A SimonK (señal compartida en IO18, tope de 1700 µs) · 4 llantas JSumo SLT20 de Ø33 mm, cada una con su
+**Hardware** (ensamble `hardware/cad/Diseno_2.SLDASM`): dos bases impresas fijas (la de atrás girada 180°), cada una con un ducto y un brushless A2217 ·
+2 ESC 30A SimonK (señal compartida en IO18, tope de 1700 µs) · 4 llantas JSumo SLT20 de Ø33 mm por fuera de la placa, cada una con su
 N20 (dos por lado en un DRV8833) · IMU MPU6050 · ESP32 DevKitC-32D · regulador LM2596 · batería 3S 2200 mAh.
 **Peso total ≈ 1,225 kg** ([lista de materiales](hardware/lista_materiales.md)).
 Detalles en [hardware/](hardware/README.md).
@@ -118,5 +118,5 @@ Si la interfaz se cierra o se pierde la conexión, el robot apaga las hélices e
 ros2 launch robot_trepador_gazebo simulacion.launch.py
 ```
 
-Con la base v2 el robot pasa solo del suelo a la pared (motor de física Bullet y reparto automático de
-empuje). Opciones y límites de la simulación en [docs/simulacion.md](docs/simulacion.md).
+El robot pasa solo del suelo a la pared con los ejes 7,5 mm más afuera que en el ensamble (`rueda_x:=0.225`,
+el valor por defecto), el motor de física Bullet y el reparto automático de empuje. Opciones y límites de la simulación en [docs/simulacion.md](docs/simulacion.md).

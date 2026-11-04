@@ -181,8 +181,8 @@ class Camara:
         return sum(p[i] * self.c[i] for i in range(3))
 
 
-# Caja del robot (semimedidas, m): x adelante, y izquierda, z arriba. Dos bases: 450 × 216 × 70 mm
-LX, LY, LZ = 0.225, 0.108, 0.035
+# Caja del robot (semimedidas, m): x adelante, y izquierda, z arriba. Con llantas: 468 × 260 × 72 mm
+LX, LY, LZ = 0.234, 0.130, 0.036
 VERTICES = [(sx * LX, sy * LY, sz * LZ) for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)]
 #  índice = 4*(sx>0) + 2*(sy>0) + (sz>0)
 CARAS = [

@@ -49,7 +49,7 @@ static const uint8_t MAC_PUENTE[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 // Conversión de /cmd_vel (lazo abierto, sin encoders)
 #define V_MAX_MS     0.30f   // velocidad aprox. del robot con PWM al 100 %
-#define ANCHO_VIA_M  0.195f  // distancia entre centros de las llantas izquierda y derecha (216 - 21 mm)
+#define ANCHO_VIA_M  0.239f  // distancia entre centros de las llantas izquierda y derecha (Diseño 2.SLDASM)
 
 // ---------------- IMU (MPU6050) ----------------
 #define IMU_FREQ_HZ    200   // lectura + filtro de orientación
