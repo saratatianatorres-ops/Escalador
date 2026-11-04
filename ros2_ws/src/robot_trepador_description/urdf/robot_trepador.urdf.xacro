@@ -62,11 +62,12 @@
   <xacro:property name="d_helice"      value="0.178"/>   <!-- 7 pulgadas: ajusta a la tuya -->
   <xacro:property name="altura_helice" value="0.045"/>   <!-- desde la cara inferior de la placa -->
 
-  <!-- Masas (kg) medidas por el equipo (hardware/lista_materiales.md). Total ≈ 1,32 kg -->
-  <xacro:property name="masa_bases"    value="0.692"/>   <!-- chasis impreso 690 g + nariz v2 -->
-  <!-- PCB 52 + ESP32 10 + buck 10 + regletas 5 + BMS 4 + IMU 2 + puente H 2 + 2 ESC 50
-       + batería 180 + porta pilas 15 + tornillería y cables 25 = 355 g, en el centro -->
-  <xacro:property name="masa_electronica" value="0.355"/>
+  <!-- Masas (kg), hardware/lista_materiales.md. Total = 1,225 kg:
+       bases 2 × 220 g + todo lo demás 785 g (peor caso que da el equipo) -->
+  <xacro:property name="masa_bases"    value="0.441"/>   <!-- 2 × 220 g + nariz v2 -->
+  <!-- 785 g − motores 153 − hélices 19 − N20 52 − llantas 48 = 513 g: batería, porta pilas, BMS,
+       2 ESC, PCB, ESP32, buck, regletas, IMU, puente H, tornillería y cables, en el centro -->
+  <xacro:property name="masa_electronica" value="0.513"/>
   <xacro:property name="z_electronica" value="0.030"/>
   <xacro:property name="masa_motor"    value="0.0765"/>  <!-- cada A2217 (153 g el par) -->
   <xacro:property name="masa_helice"   value="0.0095"/>  <!-- hélice + adaptador (19 g el par) -->

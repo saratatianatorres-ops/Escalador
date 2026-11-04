@@ -4,8 +4,8 @@ Estudio de la nariz: ¿cuánto tienen que sobresalir las llantas para que el rob
 pase solo del suelo a la pared (y de la pared al techo)?
 
 Modelo (MuJoCo) del robot real: dos bases de 225 mm (450 × 216 × 70 mm), un ducto con
-un A2217 en cada extremo, 4 llantas JSumo SLT20 (Ø33 mm) con un N20 cada una y los pesos
-medidos (hardware/lista_materiales.md).
+un A2217 en cada extremo, 4 llantas JSumo SLT20 (Ø33 mm) con un N20 cada una y 1,225 kg en total
+(hardware/lista_materiales.md).
 
 Uso:
     pip install mujoco numpy
@@ -32,7 +32,8 @@ R_RUEDA, ANCHO_BANDA = 0.0165, 0.018
 RUEDA_Y = 0.0975            # centro de la llanta (vía 195 mm)
 EJE_BAJO_PLACA = 0.005
 
-MASA_CHASIS = 1.327 - 4 * 0.012     # todo menos las 4 llantas (ver lista de materiales)
+MASA_TOTAL = 1.225                  # 2 bases × 220 g + 785 g del resto (peor caso)
+MASA_CHASIS = MASA_TOTAL - 4 * 0.012  # todo menos las 4 llantas
 MASA_RUEDA = 0.012
 EMPUJE_MAX = 8.9            # N por ducto a 1700 us (909 gf medidos a 23 A)
 PAR_N20 = 0.20              # N·m máximo por llanta
@@ -179,7 +180,7 @@ def main():
     if a.saliente is not None and a.modo:
         print(simular(a.saliente, a.modo, a.mu, a.par, a.empuje, ver=a.ver))
         return
-    print(f'Masa {1.327:.3f} kg, empuje {a.empuje} N por ducto, μ = {a.mu}, par N20 = {a.par} N·m')
+    print(f'Masa {MASA_TOTAL:.3f} kg, empuje {a.empuje} N por ducto, μ = {a.mu}, par N20 = {a.par} N·m')
     print(f'{"saliente":>9} | {"igual (hoy)":<26} | {"trasera (un pin por ESC)":<26}')
     for s in (0, 10, 20, 30, 40):
         r1 = simular(s, 'igual', a.mu, a.par, a.empuje)

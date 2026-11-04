@@ -48,7 +48,7 @@ unidas por las repisas: 450 × 216 × 70 mm. Cada base tiene su ducto con un A22
 | Eje bajo la placa | 5 mm, así la placa queda a 21,5 mm del suelo | `eje_bajo_placa` |
 | Ductos | centros a ±127 mm, Ø195 mm | `ducto_x`, `ducto_r` |
 | Hélices | 7" (178 mm) a 45 mm de la placa | `d_helice`, `altura_helice` |
-| Masa | 1,32 kg con los pesos medidos (`hardware/lista_materiales.md`) | `masa_bases`, `masa_electronica`, ... |
+| Masa | 1,225 kg: bases 2 × 220 g + 785 g del resto (`hardware/lista_materiales.md`) | `masa_bases`, `masa_electronica`, ... |
 | Par de cada N20 | 0,2 N·m | `par_rueda` |
 | Empuje | 8,9 N por ducto a 1700 µs (909 gf medidos), cae con el cuadrado del voltaje | argumento `empuje_max_n` (y el parámetro `empuje_v_ref` del nodo, 11,5 V) |
 | Batería | 3S 2200 mAh, 23 A por motor a 1700 µs | `bat_celdas`, `bat_mah` |
@@ -86,7 +86,7 @@ gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msg
 
 ### Qué reproduce Gazebo y qué no
 
-Probado con el modelo de tus dos bases v2 y los pesos reales (1,32 kg, 8,9 N por ducto):
+Probado con el modelo de tus dos bases v2 y los pesos reales (1,225 kg, 8,9 N por ducto):
 
 | Prueba | Resultado en Gazebo |
 |---|---|
