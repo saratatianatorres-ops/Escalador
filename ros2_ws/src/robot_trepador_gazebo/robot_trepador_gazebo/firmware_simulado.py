@@ -88,7 +88,11 @@ class FirmwareSimulado(Node):
         self.declare_parameter('ancho_via', 0.195)      # ANCHO_VIA_M
         self.declare_parameter('empuje_max_n', 8.9)     # N por ducto a 1700 us: 909 gf medidos a 23 A
         self.declare_parameter('empuje_v_ref', 11.5)    # voltaje al que se midió (11,7 → 11,3 V)
-        self.declare_parameter('reparto_delantera', 1.0)  # fracción del empuje en la hélice delantera
+        self.declare_parameter('reparto_delantera', 1.0)  # fracción fija del empuje en la hélice delantera
+        # 'igual': las dos hélices igual (ESC en paralelo, como el robot de hoy)
+        # 'auto' : un pin por ESC; delantera apagada mientras la nariz está en el suelo,
+        #          las dos a fondo en cuanto la IMU ve el robot en la pared o en el techo
+        self.declare_parameter('reparto', 'igual')
         self.declare_parameter('bat_celdas', 3)            # 3S (11,1 V nominal)
         self.declare_parameter('bat_mah', 2200.0)
         self.declare_parameter('bat_carga_inicial', 0.95)  # 0..1
@@ -106,6 +110,9 @@ class FirmwareSimulado(Node):
         self.via = float(self.get_parameter('ancho_via').value)
         self.empuje_max = float(self.get_parameter('empuje_max_n').value)
         self.reparto_del = float(self.get_parameter('reparto_delantera').value)
+        self.reparto = str(self.get_parameter('reparto').value)
+        self.superficie = 'suelo'
+        self.nariz = 0.0              # grados: 0 suelo, 90 pared (nariz arriba)
         self.v_ref = float(self.get_parameter('empuje_v_ref').value)
 
         self.t0 = time.monotonic()
@@ -179,6 +186,19 @@ class FirmwareSimulado(Node):
         o = m.orientation
         self.imu = euler_grados(o.w, o.x, o.y, o.z)
         self.t_imu = time.monotonic()
+        # elevación de la nariz y si el robot está boca abajo (para el reparto automático)
+        w, x, y, z = o.w, o.x, o.y, o.z
+        self.nariz = math.degrees(math.asin(max(-1.0, min(1.0, 2 * (x * z - w * y)))))
+        boca_abajo = 1 - 2 * (x * x + y * y) < 0
+        anterior = self.superficie
+        if abs(self.nariz) > 60:
+            self.superficie = 'pared'
+        elif boca_abajo and abs(self.nariz) < 30:
+            self.superficie = 'techo'
+        elif not boca_abajo and abs(self.nariz) < 30:
+            self.superficie = 'suelo'
+        if self.superficie != anterior:
+            self.get_logger().info(f'Superficie: {self.superficie}')
 
     def _ruedas_orden(self, izq, der):
         self.t_orden_ruedas = time.monotonic()
@@ -234,7 +254,10 @@ class FirmwareSimulado(Node):
         # El empuje cae con el cuadrado del voltaje: con la batería baja el robot agarra menos
         factor_v = 1.0 if self.bat_v is None else min(1.2, (self.bat_v / self.v_ref) ** 2)
         empuje = acelerador * self.empuje_max * factor_v
-        self.pub_del.publish(Float64(data=empuje * self.reparto_del))
+        frac_del = self.reparto_del
+        if self.reparto == 'auto' and self.superficie == 'suelo':
+            frac_del = 0.0          # sin succión adelante, la nariz puede levantarse en la pared
+        self.pub_del.publish(Float64(data=empuje * frac_del))
         self.pub_tra.publish(Float64(data=empuje))
         self._bateria(acelerador, ahora)
 
@@ -284,6 +307,8 @@ class FirmwareSimulado(Node):
                     'pct': int(round(interpolar((self.bat_v or 0.0) / self.bat_celdas,
                                                 CURVA_V, CURVA_PCT))),
                     'nivel': self.bat_nivel, 'celdas': self.bat_celdas},
+            'superficie': self.superficie,
+            'reparto': self.reparto,
             'sim': True,
         }
         self.pub_estado.publish(String(data=json.dumps(estado, separators=(',', ':'))))

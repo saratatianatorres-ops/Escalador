@@ -37,11 +37,14 @@ Conclusiones:
    La Base v2 usa 20 mm para tener margen.
 2. **Con los ESC en paralelo (como está hoy) solo sube en condiciones ideales.** Separar los ESC en dos
    pines y apagar la hélice delantera mientras la nariz sube lo vuelve robusto.
-3. **Pared → techo no se logró en la simulación,** ni con el doble de empuje. En la esquina superior el
-   modelo muestra contactos poco confiables, así que este resultado no sirve para concluir. El robot sí se
-   sostiene y avanza en la pared y en el techo; probar la esquina del techo con el robot real, **con cuerda
-   de seguridad**.
-4. **El margen de peso es justo:** empuje/peso = 1,48. En el techo quedan ≈ 150 gf por llanta para agarrar.
+3. **Gazebo (con Bullet) confirma el paso del suelo a la pared** con la base v2 y el reparto automático
+   (ver [simulacion.md](simulacion.md)).
+4. **Pared → techo no se logra:** en la pared, la fricción tiene que sostener los 12 N del robot con
+   2 × 8,9 N de empuje, así que no se puede bajar la hélice delantera sin que resbale (probado en Gazebo).
+   Hace falta más empuje o menos peso. Probar esa esquina con el robot real solo **con cuerda de seguridad**.
+5. **Gira muy poco:** con 457 mm entre ejes y 195 mm entre lados, el robot gira unos 8°/s sobre sí mismo
+   (MuJoCo), con o sin hélices.
+6. **El margen de peso es justo:** empuje/peso = 1,48. En el techo quedan ≈ 150 gf por llanta para agarrar.
 
 Lo que sigue es el estudio anterior, hecho con un robot genérico (0,8 kg, ruedas de Ø70 mm). La idea física
 (el reparto de empuje) es la misma; los números de arriba son los de tu robot.

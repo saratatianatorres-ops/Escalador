@@ -118,4 +118,5 @@ Si la interfaz se cierra o se pierde la conexión, el robot apaga las hélices e
 ros2 launch robot_trepador_gazebo simulacion.launch.py
 ```
 
-Opciones y límites de la simulación en [docs/simulacion.md](docs/simulacion.md).
+Con la base v2 el robot pasa solo del suelo a la pared (motor de física Bullet y reparto automático de
+empuje). Opciones y límites de la simulación en [docs/simulacion.md](docs/simulacion.md).

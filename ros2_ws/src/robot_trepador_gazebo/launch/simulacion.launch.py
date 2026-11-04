@@ -64,6 +64,9 @@ def generate_launch_description():
         DeclareLaunchArgument('yaw', default_value='0.0'),
         DeclareLaunchArgument('empuje_max_n', default_value='8.9',
                               description='Empuje de cada hélice a 1700 us, el máximo permitido (N)'),
+        DeclareLaunchArgument('reparto', default_value='auto',
+                              description="'auto': un pin por ESC, delantera apagada en el suelo "
+                                          "(sube a la pared). 'igual': ESC en paralelo, como hoy"),
         DeclareLaunchArgument('reparto_delantera', default_value='1.0',
                               description='Fracción del empuje en la hélice delantera. 1.0 = ESC '
                                           'en paralelo (firmware actual); 0.0 = solo la trasera'),
@@ -96,6 +99,7 @@ def generate_launch_description():
              # value_type: así bat_mah:=5000 (sin decimales) también funciona
              parameters=[{'empuje_max_n': num('empuje_max_n'),
                           'reparto_delantera': num('reparto_delantera'),
+                          'reparto': LaunchConfiguration('reparto'),
                           'bat_celdas': ParameterValue(LaunchConfiguration('bat_celdas'), value_type=int),
                           'bat_mah': num('bat_mah'),
                           'bat_carga_inicial': num('bat_carga_inicial')}]),

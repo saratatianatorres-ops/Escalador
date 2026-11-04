@@ -86,18 +86,36 @@ gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msg
 
 ### Qué reproduce Gazebo y qué no
 
-Probado con el modelo de tus dos bases v2 y los pesos reales (1,225 kg, 8,9 N por ducto):
+![Gazebo: del suelo a la pared](img/gazebo_suelo_pared.png)
+
+Probado con las bases v2, 1,225 kg y 8,9 N por ducto, motor de física **Bullet** y `reparto:=auto`:
 
 | Prueba | Resultado en Gazebo |
 |---|---|
-| Andar por el suelo, girar, hélices con rampa y tope de 1700 µs, parada | ✔ |
-| Quedarse pegado a la pared y subir por ella hasta el techo | ✔ |
+| Andar por el suelo, hélices con rampa y tope de 1700 µs, parada | ✔ |
+| **Pasar del suelo a la pared andando** | ✔ (unos 8 s desde que la nariz toca la pared) |
+| Subir por la pared hasta la esquina del techo | ✔ |
 | Quedarse pegado al techo y avanzar | ✔ |
-| Llegar a la pared andando | Se queda contra la pared: las llantas y el borde de la placa tocan la pared a la vez |
-| Pasar del suelo a la pared o de la pared al techo (esquinas) | ✘ No se puede comprobar en Gazebo |
+| Pasar de la pared al techo | ✘ No alcanza el empuje (ver abajo) |
+| Girar sobre sí mismo | Casi no gira (ver abajo) |
 
-En las esquinas, el motor de contactos de Gazebo (DART) casi no da fricción cuando la rueda resbala
-tocando dos superficies a la vez: la rueda delantera gira en falso. Con el modelo anterior se probó con
-ruedas esféricas, más par, otro detector de colisiones, el motor Bullet y el solver PGS, sin que cambie
-(o volviéndose inestable). Las transiciones hay que validarlas con el robot real o con MuJoCo
-([fisica_transiciones.md](fisica_transiciones.md)).
+**Motor de física.** El mundo usa Bullet (Featherstone). Con DART, el que trae Gazebo por defecto, la
+rueda que toca a la vez el suelo y la pared casi no recibe fricción de la pared y gira en falso, así que
+el robot nunca pasa a la pared.
+
+**Reparto de empuje (`reparto`).**
+- `auto` (por defecto): simula que cada ESC tiene su pin. Mientras la IMU ve el robot en el suelo, la
+  hélice delantera va apagada; en cuanto el robot pasa de 60° de inclinación, las dos van a fondo. Así sube.
+- `igual`: las dos hélices al mismo acelerador, como el robot de hoy (ESC en paralelo en el IO18). Con
+  este modo llega a la pared y **no** sube.
+
+**Pared → techo.** En la pared, la fricción tiene que sostener los 12 N del robot con 2 × 8,9 N de
+empuje. Si se baja la hélice delantera para que la nariz se despegue hacia el techo, el robot resbala
+(probado: con la delantera apagada se cae, con la mitad resbala hasta el suelo). Hace falta más empuje
+o menos peso: con empuje/peso de 1,48 no hay margen.
+
+**Girar.** Las llantas están a 457 mm entre ejes y a 195 mm entre lados. Para girar, un robot de 4 ruedas
+fijas tiene que arrastrarlas de lado, y con un robot tan largo y angosto casi no lo logra: en MuJoCo gira
+unos 8° por segundo (el 14 % de lo que pide la interfaz), con o sin hélices; en Gazebo todavía menos.
+El robot real va a girar mal. Opciones: girar mientras avanza, acercar las llantas al centro (menos
+distancia entre ejes) o usar llantas con poca fricción lateral (omnidireccionales) en un eje.
