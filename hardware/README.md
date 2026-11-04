@@ -5,7 +5,18 @@
 | `esquematico.jpg` | Esquemático de la placa del robot (KiCad) |
 | `pcb_cobre.jpg` | Máscara de la capa de cobre para transferencia (está **en espejo**: así se imprime) |
 | `lista_materiales.md` | Componentes, cantidades y peso |
-| `cad/Base_2.STL` | Base impresa (mm). La Base_1 es su espejo. Las mallas del URDF salen de aquí |
+| `cad/Base_2_v2.STL` | **Base para imprimir** (mm): nariz con el soporte del N20 integrado y la llanta 20 mm adelante |
+| `cad/Base_1_v2.STL` | Su espejo (la otra base) |
+| `cad/Base_2.STL` | Base original, sin la nariz |
+
+La v2 se genera con `herramientas/cad/base_v2.py` a partir de la original: si cambias la saliente de la
+llanta o las medidas del N20, edita los parámetros de arriba del script y vuelve a correrlo.
+
+![Nariz original y v2](../docs/img/nariz_v2.png)
+
+**Montaje del N20 en la v2:** la caja reductora entra en la cavidad de la llanta (Ø18 × 14,5 mm) y el
+cuerpo del motor pasa por el túnel de 12,3 × 10,3 mm del soporte, desde adentro hacia afuera. Fíjalo con
+una gota de pegamento o con un tornillo, y deja 1 mm entre la llanta y el soporte para que no roce.
 
 > Sube aquí también los archivos de KiCad (`.kicad_pro`, `.kicad_sch`, `.kicad_pcb`) para poder editarlos.
 
@@ -24,7 +35,7 @@ flowchart LR
     DRV -->|"A: lado izquierdo"| NL(("2 × N20<br/>izquierda"))
     DRV -->|"B: lado derecho"| NR(("2 × N20<br/>derecha"))
     ESP <-->|"I2C: IO21 SDA, IO22 SCL"| IMU["MPU6050"]
-    BAT -->|"divisor 100k / 33k"| DIV["IO34 (ADC)"] --> ESP
+    BAT -->|"divisor 100k / 22k"| DIV["IO34 (ADC)"] --> ESP
 ```
 
 ## Conexiones (según el esquemático)
@@ -55,12 +66,12 @@ medirlo. Agrega un divisor de tensión al IO34 (puedes soldarlo al aire mientras
 
 ```
  + batería ──[ R1 100 kΩ ]──┬── IO34
-                            ├──[ R2 33 kΩ ]── GND
+                            ├──[ R2 22 kΩ ]── GND
                             └──[ 100 nF ]──── GND
 ```
 
-- Con una LiPo **2S** (8,4 V llena), en el IO34 quedan 2,08 V. Para **3S** usa R2 = 22 kΩ y cambia
-  `BAT_R2_OHM` y `BAT_CELDAS` en `firmware/robot_receptor/src/config.h`.
+- Con la batería **3S** (12,6 V llena), en el IO34 quedan 2,27 V. El firmware ya viene configurado así
+  (`BAT_CELDAS = 3`, `BAT_R2_OHM = 22000` en `firmware/robot_receptor/src/config.h`).
 - Usa el IO34 (ADC1). Los pines del ADC2 no funcionan mientras la radio (ESP-NOW) está encendida.
 - **Calibración:** mide la batería con un multímetro y compárala con lo que muestra la interfaz. Pon
   `BAT_CALIBRACION = multímetro / interfaz` (por ejemplo 7,90 / 7,78 = 1,015).

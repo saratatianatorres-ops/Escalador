@@ -3,15 +3,17 @@
   Robot trepador "Escalador"
 
   Chasis: dos bases impresas iguales y fijas entre sí, una espejo de la otra
-  (hardware/cad/Base_2.STL). Van una delante de la otra, unidas por el lado de la
-  repisa, de modo que cada ducto queda en un extremo:
+  (hardware/cad/Base_2_v2.STL, generada con herramientas/cad/base_v2.py). Van una
+  delante de la otra, unidas por el lado de la repisa, de modo que cada ducto queda en
+  un extremo. La v2 tiene la nariz con el soporte del N20 integrado: las llantas
+  sobresalen 20 mm del chasis para tocar la pared primero.
 
         atrás                         adelante
      ┌────────────┬──┬──┬────────────┐
      │  ducto     │re│re│   ducto    │   450 × 216 mm
      │ (Base_1)   │pi│pi│ (Base_2)   │
      └────────────┴sa┴sa┴────────────┘
-     o                                o   <- llantas en las esquinas exteriores
+    o                                  o  <- llantas 20 mm por fuera del chasis
                     x = 0
 
   Cada base lleva un A2217 en su ducto (succión) y 2 llantas JSumo SLT20
@@ -43,12 +45,14 @@
   <xacro:property name="ancho_rueda"   value="0.021"/>
   <xacro:property name="ancho_banda"   value="0.018"/>
   <xacro:property name="r_rin"         value="0.0135"/>
-  <!-- Posición de las llantas: en las esquinas exteriores, debajo de la placa.
-       margen_x = cuánto queda el borde de la llanta por dentro del borde de la placa
+  <!-- Posición de las llantas (Base v2): en las esquinas exteriores.
+       saliente_rueda = cuánto sobresale el frente de la llanta por delante del chasis
+                        (MuJoCo: desde 10 mm pasa del suelo a la pared; se usan 20 mm)
        eje_bajo_placa = distancia del eje a la cara inferior de la placa (soporte del N20) -->
-  <xacro:property name="margen_x"      value="0.0"/>
+  <xacro:property name="saliente_rueda" value="0.020"/>
   <xacro:property name="eje_bajo_placa" value="0.005"/>
-  <xacro:property name="rueda_x"       value="${largo_base - r_rueda - margen_x}"/>
+  <xacro:property name="rueda_x"       value="${largo_base + saliente_rueda - r_rueda}"/>  <!-- 0,2285 -->
+  <xacro:property name="soporte_y"     value="${ancho/2 - ancho_rueda - 0.001 - 0.0045}"/>   <!-- centro del soporte del N20 -->
   <xacro:property name="via"           value="${ancho - ancho_rueda}"/>  <!-- 0,195 m entre centros -->
   <xacro:property name="par_rueda"     value="0.2"/>     <!-- N·m máximo por N20 -->
   <xacro:property name="vel_rueda"     value="30"/>      <!-- rad/s máximo -->
@@ -58,13 +62,18 @@
   <xacro:property name="d_helice"      value="0.178"/>   <!-- 7 pulgadas: ajusta a la tuya -->
   <xacro:property name="altura_helice" value="0.045"/>   <!-- desde la cara inferior de la placa -->
 
-  <!-- Masas (kg): PÉSALAS y corrige. Total ≈ 0,89 kg -->
-  <xacro:property name="masa_bases"    value="0.40"/>    <!-- las dos piezas impresas -->
-  <xacro:property name="masa_electronica" value="0.28"/> <!-- 2 ESC, ESP32, DRV8833, LM2596, MPU6050, batería, 4 N20 -->
-  <xacro:property name="masa_motor"    value="0.07"/>    <!-- cada A2217 -->
-  <xacro:property name="masa_helice"   value="0.01"/>
-  <xacro:property name="masa_rueda"    value="0.012"/>   <!-- goma + rin -->
+  <!-- Masas (kg) medidas por el equipo (hardware/lista_materiales.md). Total ≈ 1,32 kg -->
+  <xacro:property name="masa_bases"    value="0.692"/>   <!-- chasis impreso 690 g + nariz v2 -->
+  <!-- PCB 52 + ESP32 10 + buck 10 + regletas 5 + BMS 4 + IMU 2 + puente H 2 + 2 ESC 50
+       + batería 180 + porta pilas 15 + tornillería y cables 25 = 355 g, en el centro -->
+  <xacro:property name="masa_electronica" value="0.355"/>
+  <xacro:property name="z_electronica" value="0.030"/>
+  <xacro:property name="masa_motor"    value="0.0765"/>  <!-- cada A2217 (153 g el par) -->
+  <xacro:property name="masa_helice"   value="0.0095"/>  <!-- hélice + adaptador (19 g el par) -->
+  <xacro:property name="masa_n20"      value="0.013"/>   <!-- N20 10 g + tornillos/pegante del soporte -->
+  <xacro:property name="masa_rueda"    value="0.012"/>   <!-- goma SLT20 + rin (estimado: pésalo) -->
   <xacro:property name="masa_chasis"   value="${masa_bases + masa_electronica}"/>
+  <xacro:property name="z_cm_chasis"   value="${(masa_bases*0.0172 + masa_electronica*z_electronica)/masa_chasis}"/>
 
   <!-- ================= Materiales ================= -->
   <material name="base">    <color rgba="0.23 0.44 0.71 1"/></material>
@@ -108,14 +117,26 @@
       <origin xyz="0 0 ${(esp_placa + alto_repisa)/2}"/>
       <geometry><box size="${2*ancho_repisa} ${ancho} ${alto_repisa - esp_placa}"/></geometry>
     </collision>
+    <!-- soportes de los N20 en las cuatro esquinas (nariz v2) -->
+    <xacro:macro name="col_soporte" params="sx sy">
+      <collision>
+        <origin xyz="${sx*rueda_x} ${sy*soporte_y} -0.0013"/>
+        <geometry><box size="0.0171 0.009 0.0226"/></geometry>
+      </collision>
+    </xacro:macro>
+    <xacro:col_soporte sx="1"  sy="1"/>
+    <xacro:col_soporte sx="1"  sy="-1"/>
+    <xacro:col_soporte sx="-1" sy="1"/>
+    <xacro:col_soporte sx="-1" sy="-1"/>
 
-    <!-- Centro de masa e inercia calculados de la malla de las dos bases (por kg × masa) -->
+    <!-- Bases: inercia calculada de la malla (por kg). Electrónica y batería: bloque de
+         15 × 10 × 4 cm en el centro. -->
     <inertial>
-      <origin xyz="0 0 0.0173"/>
+      <origin xyz="0 0 ${z_cm_chasis}"/>
       <mass value="${masa_chasis}"/>
-      <inertia ixx="${0.004484*masa_chasis}" ixy="0" ixz="0"
-               iyy="${0.016137*masa_chasis}" iyz="0"
-               izz="${0.019815*masa_chasis}"/>
+      <inertia ixx="${0.004479*masa_bases + masa_electronica*(0.15*0.15 + 0.04*0.04)/12}" ixy="0" ixz="0"
+               iyy="${0.016294*masa_bases + masa_electronica*(0.10*0.10 + 0.04*0.04)/12}" iyz="0"
+               izz="${0.019963*masa_bases + masa_electronica*(0.10*0.10 + 0.15*0.15)/12}"/>
     </inertial>
   </link>
 
@@ -159,6 +180,23 @@
       <mu1>${mu_rueda}</mu1>
       <mu2>${mu_rueda}</mu2>
     </gazebo>
+
+    <!-- N20 pegado en su soporte (fijo al chasis). La caja reductora va dentro de la llanta -->
+    <link name="n20_${nombre}">
+      <visual>
+        <geometry><box size="0.012 0.025 0.010"/></geometry>
+        <material name="gris"/>
+      </visual>
+      <inertial>
+        <mass value="${masa_n20}"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="3e-7" iyz="0" izz="1e-6"/>
+      </inertial>
+    </link>
+    <joint name="n20_${nombre}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="n20_${nombre}"/>
+      <origin xyz="${x} ${y*(1 - 0.0085/(via/2))} ${-eje_bajo_placa}"/>  <!-- 8,5 mm hacia adentro de la llanta -->
+    </joint>
   </xacro:macro>
 
   <!-- Base delantera (Base_2) y base trasera (Base_1): 2 llantas cada una -->

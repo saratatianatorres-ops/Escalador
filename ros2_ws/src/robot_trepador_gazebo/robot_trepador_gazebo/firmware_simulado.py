@@ -86,12 +86,13 @@ class FirmwareSimulado(Node):
         super().__init__('robot_trepador')
         self.declare_parameter('v_max', 0.30)           # V_MAX_MS
         self.declare_parameter('ancho_via', 0.195)      # ANCHO_VIA_M
-        self.declare_parameter('empuje_max_n', 10.0)    # N por hélice a ESC_MAX (1700 us)
+        self.declare_parameter('empuje_max_n', 8.9)     # N por ducto a 1700 us: 909 gf medidos a 23 A
+        self.declare_parameter('empuje_v_ref', 11.5)    # voltaje al que se midió (11,7 → 11,3 V)
         self.declare_parameter('reparto_delantera', 1.0)  # fracción del empuje en la hélice delantera
-        self.declare_parameter('bat_celdas', 2)
+        self.declare_parameter('bat_celdas', 3)            # 3S (11,1 V nominal)
         self.declare_parameter('bat_mah', 2200.0)
         self.declare_parameter('bat_carga_inicial', 0.95)  # 0..1
-        self.declare_parameter('bat_amp_motor', 24.0)      # A de cada A2217 a ESC_MAX (1700 us)
+        self.declare_parameter('bat_amp_motor', 23.0)      # A de cada A2217 a ESC_MAX (1700 us)
         self.declare_parameter('bat_mohm_celda', 10.0)     # resistencia interna por celda
         self.bat_celdas = int(self.get_parameter('bat_celdas').value)
         self.bat_ah = float(self.get_parameter('bat_mah').value) / 1000.0
@@ -105,6 +106,7 @@ class FirmwareSimulado(Node):
         self.via = float(self.get_parameter('ancho_via').value)
         self.empuje_max = float(self.get_parameter('empuje_max_n').value)
         self.reparto_del = float(self.get_parameter('reparto_delantera').value)
+        self.v_ref = float(self.get_parameter('empuje_v_ref').value)
 
         self.t0 = time.monotonic()
         self.armado = False
@@ -229,7 +231,9 @@ class FirmwareSimulado(Node):
 
         # Hélices: empuje proporcional al acelerador
         acelerador = max(0.0, min(1.0, (self.esc_act - ESC_APAGADO) / (ESC_MAX - ESC_APAGADO)))
-        empuje = acelerador * self.empuje_max
+        # El empuje cae con el cuadrado del voltaje: con la batería baja el robot agarra menos
+        factor_v = 1.0 if self.bat_v is None else min(1.2, (self.bat_v / self.v_ref) ** 2)
+        empuje = acelerador * self.empuje_max * factor_v
         self.pub_del.publish(Float64(data=empuje * self.reparto_del))
         self.pub_tra.publish(Float64(data=empuje))
         self._bateria(acelerador, ahora)

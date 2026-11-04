@@ -10,9 +10,10 @@ de ROS 2 en el PC. Incluye modelo 3D para **RViz** y simulación en **Gazebo** c
 
 ![Modelo del robot](docs/img/modelo_rviz.png)
 
-**Hardware:** dos bases impresas fijas (una espejo de la otra), cada una con un ducto y un brushless A2217 ·
+**Hardware:** dos bases impresas fijas (una espejo de la otra, versión v2 con nariz), cada una con un ducto y un brushless A2217 ·
 2 ESC 30A SimonK (señal compartida en IO18, tope de 1700 µs) · 4 llantas JSumo SLT20 de Ø33 mm, cada una con su
-N20 (dos por lado en un DRV8833) · IMU MPU6050 · ESP32 DevKitC-32D · regulador LM2596.
+N20 (dos por lado en un DRV8833) · IMU MPU6050 · ESP32 DevKitC-32D · regulador LM2596 · batería 3S 2200 mAh.
+**Peso total ≈ 1,32 kg** ([lista de materiales](hardware/lista_materiales.md)).
 Detalles en [hardware/](hardware/README.md).
 
 ---
@@ -29,7 +30,8 @@ Escalador/
 │   ├── robot_trepador_gui/          # Interfaz de control (Python: rclpy + Tkinter) y launch del robot real
 │   ├── robot_trepador_description/  # Modelo URDF, RViz y odometría con la IMU
 │   └── robot_trepador_gazebo/       # Mundo, puente ROS-Gazebo y firmware simulado
-├── hardware/                  # Esquemático, PCB, conexiones y lista de materiales
+├── hardware/                  # Esquemático, PCB, piezas impresas (cad/), conexiones y lista de materiales
+├── herramientas/              # Generador de la base v2 (cad/) y estudio de física en MuJoCo
 ├── docs/                      # Arquitectura, firmware, física, simulación e instalación
 └── scripts/                   # Instalación de dependencias
 ```

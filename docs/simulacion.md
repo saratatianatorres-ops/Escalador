@@ -36,27 +36,28 @@ paralelo, así que el robot real siempre usa 1.0).
 
 ![Modelo del robot en RViz](img/modelo_rviz.png)
 
-El chasis son tus dos bases impresas (`hardware/cad/Base_2.STL` y su espejo), una delante de la otra y
+El chasis son tus dos bases impresas, versión v2 con la nariz (`hardware/cad/Base_2_v2.STL` y su espejo), una delante de la otra y
 unidas por las repisas: 450 × 216 × 70 mm. Cada base tiene su ducto con un A2217 y 2 llantas JSumo SLT20
-(Ø33 × 21 mm) en las esquinas exteriores. Todo se ajusta arriba de `robot_trepador.urdf.xacro`:
+(Ø33 × 21 mm) que sobresalen 20 mm por delante y por detrás. Todo se ajusta arriba de `robot_trepador.urdf.xacro`:
 
 | Medida | Valor | Propiedad |
 |---|---|---|
 | Llantas | Ø33 × 21 mm (banda 18 mm), fricción 1,0 | `r_rueda`, `ancho_rueda`, `mu_rueda` |
-| Distancia entre ejes | 417 mm (llantas al ras del frente y de la cola) | `margen_x` |
+| Distancia entre ejes | 457 mm (llantas 20 mm por fuera del chasis) | `saliente_rueda` |
 | Vía (centro a centro) | 195 mm | sale de `ancho` − `ancho_rueda` |
 | Eje bajo la placa | 5 mm, así la placa queda a 21,5 mm del suelo | `eje_bajo_placa` |
 | Ductos | centros a ±127 mm, Ø195 mm | `ducto_x`, `ducto_r` |
 | Hélices | 7" (178 mm) a 45 mm de la placa | `d_helice`, `altura_helice` |
-| Masa | 0,89 kg en total (**estimada**: pésalo) | `masa_bases`, `masa_electronica`, ... |
+| Masa | 1,32 kg con los pesos medidos (`hardware/lista_materiales.md`) | `masa_bases`, `masa_electronica`, ... |
 | Par de cada N20 | 0,2 N·m | `par_rueda` |
-| Empuje | 10 N por ducto a 1700 µs | argumento `empuje_max_n` |
+| Empuje | 8,9 N por ducto a 1700 µs (909 gf medidos), cae con el cuadrado del voltaje | argumento `empuje_max_n` (y el parámetro `empuje_v_ref` del nodo, 11,5 V) |
+| Batería | 3S 2200 mAh, 23 A por motor a 1700 µs | `bat_celdas`, `bat_mah` |
 
 Para Gazebo, los choques usan formas simples (la placa como caja y los ductos como cilindros), que son
 más rápidas y estables que la malla; lo que ves es la malla real.
 
-Dónde van exactamente los soportes de los N20 no está en el STL: si tus llantas no quedan al ras del
-borde, cambia `margen_x` y `eje_bajo_placa`.
+Los soportes de los N20 están en la Base v2. Si cambias la saliente en `herramientas/cad/base_v2.py`,
+cambia también `saliente_rueda` en el URDF.
 
 **Probar en la pared:** pon las hélices al máximo con el robot en el suelo y luego colócalo en la pared:
 
@@ -85,12 +86,13 @@ gz service -s /world/habitacion/set_pose --reqtype gz.msgs.Pose --reptype gz.msg
 
 ### Qué reproduce Gazebo y qué no
 
-Probado con el modelo de tus dos bases:
+Probado con el modelo de tus dos bases v2 y los pesos reales (1,32 kg, 8,9 N por ducto):
 
 | Prueba | Resultado en Gazebo |
 |---|---|
 | Andar por el suelo, girar, hélices con rampa y tope de 1700 µs, parada | ✔ |
-| Quedarse pegado a la pared con 10 N por ducto y subir por ella hasta el techo | ✔ |
+| Quedarse pegado a la pared y subir por ella hasta el techo | ✔ |
+| Quedarse pegado al techo y avanzar | ✔ |
 | Llegar a la pared andando | Se queda contra la pared: las llantas y el borde de la placa tocan la pared a la vez |
 | Pasar del suelo a la pared o de la pared al techo (esquinas) | ✘ No se puede comprobar en Gazebo |
 

@@ -1,28 +1,50 @@
-# Lista de materiales
+# Lista de materiales y presupuesto de peso
 
-Completa las columnas vacías con tus datos (proveedor, precio, peso medido). El peso importa:
-las simulaciones de `docs/fisica_transiciones.md` suponen **0,8 kg en total** y **≥ 10 N de empuje por
-hélice**. Pesa el robot armado y mide el empuje de cada A2217 sobre una balanza.
+Los pesos marcados como **medido** son los que pesó el equipo (8 de octubre). Los **estimados**
+hay que confirmarlos con una balanza. El URDF (`robot_trepador.urdf.xacro`) y las simulaciones
+usan exactamente estos valores.
 
 ## Robot
 
-| Cant. | Componente | Función | Peso típico (g) | Peso medido (g) | Precio | Proveedor |
-|---:|---|---|---:|---:|---:|---|
-| 2 | Motor brushless A2217 (KV: ___) | Hélices de succión | ~70 c/u | | | |
-| 2 | Hélice (tamaño: ___ pulgadas) | Empuje hacia la superficie | | | | |
-| 2 | ESC 30A SimonK | Control de cada A2217 (señal en IO18) | ~25 c/u | | | |
-| 4 | Motorreductor N20 (___ V, ___ RPM) | Tracción, 2 por lado | ~10 c/u | | | |
-| 4 | Goma JSumo SLT20 + rin (Ø33 × 21 mm) | Llantas de silicona, fricción ≥ 0,9 | ~12 c/u | | $ 33.000 + IVA (precio publicado; revisa si es por par) | JSumo |
-| 1 | Módulo DRV8833 | Puente H de los N20 | ~3 | | | |
-| 1 | ESP32 DevKitC-32D | Nodo micro-ROS del robot | ~10 | | | |
-| 1 | Módulo MPU6050 | IMU (orientación) | ~2 | | | |
-| 1 | LM2596 ajustable (salida 5 V) | Regulador para ESP32 y N20 | ~20 | | | |
-| 1 | Batería LiPo (___ S, ___ mAh) | Alimentación | | | | |
-| 1 + 1 | Resistencias 100 kΩ y 33 kΩ (22 kΩ si es 3S) | Divisor para medir la batería (IO34) | | | | |
-| 1 | Condensador cerámico 100 nF | Filtro del divisor | | | | |
-| 3 | Bornera de 3 pines (J1, J2, J3) | ESC y motores | | | | |
-| 1 | Placa de cobre (PCB de una cara) | Placa del robot | | | | |
-| 2 | Base impresa (`cad/Base_2.STL` y su espejo) | Chasis, ducto y soporte del A2217 | | | | |
+| Grupo | Cant. | Componente | Peso (g) | Origen | Notas |
+|---|---:|---|---:|---|---|
+| Estructura | 2 | Base impresa v2 (`cad/Base_2_v2.STL` y `Base_1_v2.STL`) | 692 | medido 690 + nariz v2 | Ducto, soporte del A2217 y soportes de los N20 |
+| Adhesión | 2 | Motor brushless A2217 2300KV | 153 | medido | 909 gf por motor a 23 A, batería entre 11,7 y 11,3 V |
+| | 2 | Hélice + adaptador | 19 | medido | |
+| | 2 | ESC 30A SimonK | 50 | estimado | Señal compartida en IO18; tope de 1700 µs |
+| Tracción | 4 | Motorreductor N20 | 40 | medido (2 × 10 g) | Uno por llanta, dos por lado en paralelo |
+| | 4 | Tornillos o pegante de los soportes del N20 | 12 | estimado | El soporte ya va impreso en la base |
+| | 4 | Goma JSumo SLT20 + rin (Ø33 × 21 mm) | 48 | estimado | Silicona, fricción ≈ 1. $ 33.000 + IVA (revisa si es por par) |
+| | 1 | Puente H DRV8833 | 2 | medido | |
+| Electrónica | 2 | PCB | 52 | medido | |
+| | 1 | ESP32 DevKitC-32D | 10 | medido | |
+| | 1 | Buck LM2596 (salida 5 V) | 10 | medido | |
+| | 1 | Regletas | 5 | medido | |
+| | 1 | BMS | 4 | medido | |
+| | 1 | IMU MPU6050 | 2 | medido | |
+| Energía | 1 | Batería 3S (11,1 V) 2200 mAh | 180 | medido | |
+| | 1 | Porta pilas | 15 | medido | |
+| Varios | — | Tornillería, cableado | 25 | estimado | |
+| | | **Total** | **≈ 1 319** | | |
+
+**Relación empuje/peso a 1700 µs:** 2 × 909 gf / 1 319 g = **1,38** con la batería entre 11,3 y 11,7 V.
+En el techo, lo que aprieta las llantas contra la superficie es el empuje **menos** el peso: unos
+500 gf en total (≈ 125 gf por llanta). Con la batería más baja, el empuje cae con el cuadrado del
+voltaje y ese margen se acaba rápido. Cada gramo que se le quite al robot es agarre que se gana.
+
+## Para medir la batería (agregar)
+
+| Cant. | Componente | Función |
+|---:|---|---|
+| 1 + 1 | Resistencias 100 kΩ y 22 kΩ | Divisor de la batería 3S hacia el IO34 |
+| 1 | Condensador cerámico 100 nF | Filtro del divisor |
+
+## Placa
+
+| Cant. | Componente |
+|---:|---|
+| 3 | Bornera de 3 pines (J1, J2, J3) |
+| 1 | Placa de cobre de una cara |
 
 ## Estación en el PC
 
@@ -30,5 +52,3 @@ hélice**. Pesa el robot armado y mide el empuje de cada A2217 sobre una balanza
 |---:|---|---|
 | 1 | ESP32 (cualquier DevKit) | Puente USB ⇄ ESP-NOW (`firmware/puente_pc`) |
 | 1 | Cable USB de datos | PC ⇄ ESP32 puente |
-
-**Peso total medido:** ______ g · **Empuje medido por hélice al 100 %:** ______ g

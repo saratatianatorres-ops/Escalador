@@ -3,16 +3,46 @@
 El robot tiene que pasar de un plano a otro **por sí mismo**, sin cuerdas. Este documento resume qué hace
 falta para lograrlo, cómo se comprobó en simulación y qué reglas de diseño salen de ahí.
 
-> **Ojo: estas simulaciones se hicieron con un robot distinto al tuyo** (un solo chasis de 0,8 kg, ruedas de
-> Ø70 mm, 19 cm entre ejes y dos hélices sueltas encima). Tu robot son dos bases de 450 mm en total, con
-> llantas de Ø33 mm, 417 mm entre ejes y un ducto de 70 mm de alto en cada extremo. La idea del reparto
-> de empuje sigue valiendo, pero los números no. Además, en tu robot el borde de la placa queda al ras de
-> las llantas, así que la placa también toca la pared y frena la subida (regla 1). Hay que repetir las
-> pruebas con tus medidas.
->
-> **Estado actual del robot:** los dos ESC comparten la señal (IO18), así que todavía **no** puede hacer el
-> reparto de empuje que se describe abajo. Para eso cada ESC necesita su propio pin
-> (ver [hardware/README.md](../hardware/README.md) y [arquitectura.md](arquitectura.md#5-próximo-paso-supervisor-idea-tomada-de-carro_trepador)).
+## Resumen para tu robot (nariz v2)
+
+Estudio hecho con **tu robot real** en MuJoCo (`herramientas/fisica_mujoco/nariz.py`): dos bases de 450 mm
+en total, llantas JSumo SLT20 de Ø33 mm, ductos a ±127 mm, **1,32 kg** con los pesos medidos y **8,9 N por
+ducto** a 1700 µs (909 gf medidos a 23 A).
+
+**Suelo → pared, según cuánto sobresale la llanta por delante del chasis** (μ = 1,0; N20 de 0,2 N·m):
+
+| Saliente | Dos hélices iguales (hoy) | Delantera apagada hasta la vertical (un pin por ESC) |
+|---|---|---|
+| 0 mm (Base_2 original) | ✘ no sube | ✘ no sube |
+| 5 mm | ✔ | — |
+| 10 mm | ✔ | ✔ |
+| **20 mm (Base v2)** | ✔ | ✔ |
+| 30–40 mm | ✔ | ✔ |
+
+**¿Qué tan robusto es?** Con 20 mm de saliente:
+
+| Condición | Hélices iguales | Delantera apagada |
+|---|---|---|
+| Ideal (μ 1,0, 8,9 N, N20 0,2 N·m) | ✔ | ✔ |
+| Fricción 0,9 | ✘ | ✔ |
+| Fricción 0,8 | ✘ | ✔ |
+| Batería baja (7,6 N por ducto) | ✔ | ✔ |
+| N20 débiles (0,10–0,15 N·m) | ✘ | ✔ |
+
+Conclusiones:
+1. **La nariz es lo que más importa.** Con la llanta al ras (la Base_2 original) el robot nunca sube, porque
+   la placa y el ducto tocan la pared al mismo tiempo que las llantas. Desde 5–10 mm de saliente sí sube.
+   La Base v2 usa 20 mm para tener margen.
+2. **Con los ESC en paralelo (como está hoy) solo sube en condiciones ideales.** Separar los ESC en dos
+   pines y apagar la hélice delantera mientras la nariz sube lo vuelve robusto.
+3. **Pared → techo no se logró en la simulación,** ni con el doble de empuje. En la esquina superior el
+   modelo muestra contactos poco confiables, así que este resultado no sirve para concluir. El robot sí se
+   sostiene y avanza en la pared y en el techo; probar la esquina del techo con el robot real, **con cuerda
+   de seguridad**.
+4. **El margen de peso es justo:** empuje/peso = 1,38. En el techo quedan ≈ 125 gf por llanta para agarrar.
+
+Lo que sigue es el estudio anterior, hecho con un robot genérico (0,8 kg, ruedas de Ø70 mm). La idea física
+(el reparto de empuje) es la misma; los números de arriba son los de tu robot.
 
 ## El problema
 
@@ -113,8 +143,18 @@ se quede contra la pared que intentar una subida que no va a lograr.
 
 ## Repetir las simulaciones de MuJoCo
 
-Los scripts (`uturn.py`, `sweep2.py`) se hicieron en una conversación anterior y **no están en este
-repositorio**. Si los tienes, guárdalos en `herramientas/fisica_mujoco/`:
+El estudio de la nariz con tu robot está en el repositorio:
+
+```bash
+pip install mujoco numpy
+cd herramientas/fisica_mujoco
+python3 nariz.py                                       # tabla de salientes
+python3 nariz.py --saliente 20 --modo trasera --ver    # un caso, con ventana 3D
+python3 nariz.py --mu 0.9 --par 0.1                    # otras condiciones
+```
+
+Los scripts del estudio anterior (`uturn.py`, `sweep2.py`) se hicieron en otra conversación y **no están en
+este repositorio**. Si los tienes, guárdalos en la misma carpeta:
 
 ```bash
 pip install mujoco numpy
